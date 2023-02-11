@@ -29,7 +29,7 @@ html, body, #app, .app{
     position: fixed;
 }
 .app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
@@ -94,15 +94,22 @@ html, body, #app, .app{
   }
   .VisibleItem {
     grid-area: main;
+    width:100%;
     .task {
       width: 80%;
       margin: 20px;
+      justify-content: center;
     }
-    .deleteSubTask {
+    .deleteSubTask, .complete, .modify {
+      margin: 10px;
       background-color:rgba(128, 128, 128, 0.25);
       border-radius:10px;
-      width:20%;
+      width:10%;
     }
+    
+  }
+  .isCompleted {
+    text-decoration: line-through;
   }
 }
 
