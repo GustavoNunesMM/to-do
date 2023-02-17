@@ -1,116 +1,60 @@
 <template>
-  <div class="app">
-    <TaskManager></TaskManager>
-    
-  </div>
+<div class="app">
+
+    <div class="header">
+      <router-link to="/" class="home">
+        <img src="https://cdn-icons-png.flaticon.com/512/4043/4043180.png">
+        {{ user }}
+      </router-link>
+    </div>
+
+    <div class="body">
+      <router-view></router-view>
+    </div>
+
+</div>
 </template>
 
 <script>
-import TaskManager from "./components/itemManager.vue"
 
 export default {
   name: 'App',
-  data() {
-    return {
-      ID:0,
-    }
-  },
-  components: {
-    TaskManager
-  }  
 }
 </script>
 
 <style lang="scss">
-html, body, #app, .app{
-    height: 100%;
+  body {
+    margin:0;
+  }
+  .app {
+    display:grid;
+    grid-template-rows: 60px auto;
+    grid-template-areas: 
+    "header"
+    "body";
+  }
+  .header {
     width:100%;
-    top: 0;
+    height: 60px;
     position: fixed;
-}
-.app {
-  font-family: Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-  display:grid;
-  place-items:center;
-  grid-template-columns: 20% 80%;
-  grid-template-areas:
-  "sidebar main";
-
-  input {
-      background-color:white;
-      margin:20px;
-      height: 30px;
-      border: hidden;
-      border-bottom:ridge;
-      border-color: rgba(0, 0, 0, 0.5);
-      outline:none;
-    }
-    button {
-      height: 30px;
-      background-color:white;
-      border: none;
-      height:30px;
-    }
-  .sidebar {
-    grid-area: sidebar;
-    padding-right:20px;
-    border-right: solid;
-    border-color: rgba(0, 0, 0, 0.5);
-    height:100%;
-    width:100%;
-    
-    .addNewItem {
-      margin-left:-20px;
-    }
-    
-    .item {
-      background-color:rgba(128, 128, 128, 0.25);
-      border-radius: 10px;
-      width:70%;
-      height: 30px;
-      margin:10px;
-       &:hover {
-        background-color:rgba(128, 128, 128, 0.4)
-       }
-       &:onclick {
-        background-color:rgba(128, 128, 128, 0.6)
-       }
-    }
-
-    .deleteItem {
-      background-color:rgba(128, 128, 128, 0.25);
-      border-radius:10px;
-      width:20%;
-
-      border:outset;
-      border-width: 1px;
-      border-color:rgba(102, 102, 102, 0.5);
-    }
+    grid-area:header;
+    display: grid;
+    grid-template-columns: 10% auto 40%;
   }
-  .VisibleItem {
-    grid-area: main;
-    width:100%;
-    .task {
-      width: 80%;
-      margin: 20px;
-      justify-content: center;
-    }
-    .deleteSubTask, .complete, .modify {
-      margin: 10px;
-      background-color:rgba(128, 128, 128, 0.25);
-      border-radius:10px;
-      width:10%;
-    }
-    
+  .body {
+    grid-area:body;
   }
-  .isCompleted {
-    text-decoration: line-through;
+  img {
+    height:50px;
   }
-}
+  a {
+    display: inline-block;
+    width:10%;
+  }
+  .home {
+    grid-column-start: 1;
+    grid-column-end: 1;
+    place-self: center;
+  }
 
 </style>
