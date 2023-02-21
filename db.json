@@ -4,13 +4,58 @@
       "user": "Jato",
       "password": "lambda12",
       "email": "gusnus321@gmail.com",
-      "id": 5
+      "id": 5,
+      "tasks": [
+        {
+          "id": 1,
+          "nameTask": "asdasd",
+          "subItem": [
+            {
+              "text": "asda",
+              "completed": false
+            },
+            {
+              "text": "asdad",
+              "completed": false
+            }
+          ],
+          "isVisible": true,
+          "isModifying": false
+        },
+        {
+          "id": 2,
+          "nameTask": "asdad",
+          "subItem": [],
+          "isVisible": false,
+          "isModifying": false
+        },
+        {
+          "id": 2,
+          "nameTask": "asd",
+          "subItem": [],
+          "isVisible": false,
+          "isModifying": false
+        },
+        {
+          "id": 1,
+          "nameTask": "asdad",
+          "subItem": [],
+          "isVisible": false,
+          "isModifying": false
+        }
+      ]
     },
     {
-      "user": "Jat",
+      "user": "Gustavo",
       "password": "oi",
-      "email": "asdada",
+      "email": "gusnus321@hotmail.com",
       "id": 6
+    },
+    {
+      "user": "user",
+      "password": "lambda12",
+      "email": "asdadsa",
+      "id": 8
     }
   ]
 }
