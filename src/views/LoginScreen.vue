@@ -84,6 +84,7 @@ export default {
         user: this.registerUser,
         password: this.registerPassword,
         email: this.registerEmail,
+        tasks: [],
       })
       .then(() => {
         console.log("usuario cadastrado")
@@ -107,8 +108,6 @@ export default {
     },
     entry(id) {
       this.$router.push(`user/${id}`)
-      console.log("usuario persistente cadastrado por 10 minutos")
-      setTimeout(() => {this.userId = ""}, 10 * 60 * 1000)
     }
 
   }
@@ -123,9 +122,7 @@ export default {
     height: 100%;
     display:grid;
     grid-template-columns: 5% 50% 10% 25% 10%;
-    grid-template-rows: 10% auto 15%;
-
-    
+    grid-template-rows: 10% auto 15%;    
   }
   .background {
     grid-area: 2/2/2/2;
@@ -134,38 +131,40 @@ export default {
   }
   .enter {
     grid-area: 2/4/2/4;
-    
+    margin-top:15%;
+    margin-bottom:15%;
     background-color:rgba(0, 0, 255, 0.493);
     border-radius:10px;
 
     display:grid;
-    grid-template-columns:10% 40% 40% 10%;
-    grid-template-rows: 30% 10% 10% 10% 10% 10%;
+    grid-template-columns:10% 80% 10%;
+    grid-template-rows: 30% 40% 10% 10%;
     
     .login {
-      grid-area: 2/2/4/4;
+      margin-left:25%;
+      grid-area: 2/2/2/2;
     }
     .register {
-      grid-area: 2/2/4/4;
+      margin-left:25%;
+      grid-area: 2/2/4/2;
     }
     .buttons {
-        grid-area: 6/2/6/4;
+        grid-area: 4/2/4/2;
         place-self:center;
     }
     .homeLogo {
       grid-area: 1/2/1/2;
       width: 100%;
       height:100%;
-      margin-left:50%;
     }
     a {
-      grid-area: 5/2/5/3;
-      margin-left: 100%;
-      width: 100%;
-      place-self: center;
+      grid-area: 3/2/3/2;
+      margin-top:10%;
+      justify-self: center;
+      width:100%;
+      text-align: center;
     }
     input {
-    margin-left:12.5%;
     height: 30px;
     border-radius: 10px;
     margin-top: 20px;

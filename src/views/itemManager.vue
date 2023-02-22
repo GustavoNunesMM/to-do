@@ -1,5 +1,5 @@
 <template>
-  <HeaderComponent/>
+  <HeaderComponent :user="user.user"/>
   <div class="TaskManager" v-if="!noHaveUser">
     <div class="sidebar">
       <input class="newItem" v-model="input" autofocus @keypress.enter="CreateTask()" placeholder="Digite uma nova Tarefa"> 
@@ -34,7 +34,7 @@
 
 <script>
 const axios = require("axios")
-import HeaderComponent from "./HeaderComponent.vue"
+import HeaderComponent from '../../components/headerComponent.vue'
 
 export default {
   data() {
@@ -49,7 +49,7 @@ export default {
     }
   },
   components: {
-    HeaderComponent
+    HeaderComponent,
   },
   async created() {
     try {

@@ -8,54 +8,53 @@
       "tasks": [
         {
           "id": 1,
-          "nameTask": "asdasd",
-          "subItem": [
-            {
-              "text": "asda",
-              "completed": false
-            },
-            {
-              "text": "asdad",
-              "completed": false
-            }
-          ],
-          "isVisible": true,
-          "isModifying": false
+          "nameTask": "Tarefa 1",
+          "subItem": [],
+          "isVisible": false,
+          "isModifying": true
         },
         {
           "id": 2,
-          "nameTask": "asdad",
+          "nameTask": "Tarefa 2",
           "subItem": [],
           "isVisible": false,
           "isModifying": false
         },
         {
-          "id": 2,
-          "nameTask": "asd",
+          "id": 3,
+          "nameTask": "Tarefa 3",
           "subItem": [],
           "isVisible": false,
           "isModifying": false
         },
         {
           "id": 1,
-          "nameTask": "asdad",
-          "subItem": [],
-          "isVisible": false,
+          "nameTask": "asda",
+          "subItem": [
+            {
+              "text": "asdasd",
+              "completed": false
+            },
+            {
+              "text": "asd",
+              "completed": false
+            },
+            {
+              "text": "a",
+              "completed": false
+            }
+          ],
+          "isVisible": true,
           "isModifying": false
         }
       ]
     },
     {
-      "user": "Gustavo",
-      "password": "oi",
-      "email": "gusnus321@hotmail.com",
+      "user": "gustavo",
+      "password": "123",
+      "email": "exemplo@gmail.com",
+      "tasks": [],
       "id": 6
-    },
-    {
-      "user": "user",
-      "password": "lambda12",
-      "email": "asdadsa",
-      "id": 8
     }
   ]
 }
