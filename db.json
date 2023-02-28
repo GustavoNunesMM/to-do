@@ -7,44 +7,36 @@
       "id": 5,
       "tasks": [
         {
-          "id": 1,
+          "id": null,
           "nameTask": "Tarefa 1",
           "subItem": [],
           "isVisible": false,
-          "isModifying": true
+          "isModifying": false
         },
         {
-          "id": 2,
+          "id": null,
           "nameTask": "Tarefa 2",
           "subItem": [],
-          "isVisible": false,
+          "isVisible": true,
           "isModifying": false
         },
         {
-          "id": 3,
+          "id": null,
           "nameTask": "Tarefa 3",
-          "subItem": [],
-          "isVisible": false,
-          "isModifying": false
-        },
-        {
-          "id": 1,
-          "nameTask": "asda",
           "subItem": [
             {
-              "text": "asdasd",
-              "completed": false
-            },
-            {
-              "text": "asd",
-              "completed": false
-            },
-            {
-              "text": "a",
+              "text": "adsad",
               "completed": false
             }
           ],
-          "isVisible": true,
+          "isVisible": false,
+          "isModifying": false
+        },
+        {
+          "id": null,
+          "nameTask": "Tarefa 4",
+          "subItem": [],
+          "isVisible": false,
           "isModifying": false
         }
       ]
@@ -55,6 +47,34 @@
       "email": "exemplo@gmail.com",
       "tasks": [],
       "id": 6
+    },
+    {
+      "user": "Ja",
+      "password": "123",
+      "email": "las@gmail.com",
+      "tasks": [],
+      "id": 9
+    },
+    {
+      "user": "Jas",
+      "password": "123",
+      "email": "asda@gmail.com",
+      "tasks": [],
+      "id": 10
+    },
+    {
+      "user": "",
+      "password": "",
+      "email": "",
+      "tasks": [],
+      "id": 11
+    },
+    {
+      "user": "asd",
+      "password": "asd",
+      "email": "asdasd",
+      "tasks": [],
+      "id": 12
     }
   ]
 }
