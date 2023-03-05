@@ -10,27 +10,22 @@
           "id": null,
           "nameTask": "Tarefa 1",
           "subItem": [],
-          "isVisible": false,
+          "isVisible": true,
           "isModifying": false
         },
         {
           "id": null,
           "nameTask": "Tarefa 2",
           "subItem": [],
-          "isVisible": true,
+          "isVisible": false,
           "isModifying": false
         },
         {
           "id": null,
           "nameTask": "Tarefa 3",
-          "subItem": [
-            {
-              "text": "adsad",
-              "completed": false
-            }
-          ],
+          "subItem": [],
           "isVisible": false,
-          "isModifying": false
+          "isModifying": true
         },
         {
           "id": null,
@@ -47,34 +42,6 @@
       "email": "exemplo@gmail.com",
       "tasks": [],
       "id": 6
-    },
-    {
-      "user": "Ja",
-      "password": "123",
-      "email": "las@gmail.com",
-      "tasks": [],
-      "id": 9
-    },
-    {
-      "user": "Jas",
-      "password": "123",
-      "email": "asda@gmail.com",
-      "tasks": [],
-      "id": 10
-    },
-    {
-      "user": "",
-      "password": "",
-      "email": "",
-      "tasks": [],
-      "id": 11
-    },
-    {
-      "user": "asd",
-      "password": "asd",
-      "email": "asdasd",
-      "tasks": [],
-      "id": 12
     }
   ]
 }

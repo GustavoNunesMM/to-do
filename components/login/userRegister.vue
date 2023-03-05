@@ -36,12 +36,13 @@ export default {
     mounted() {
         axios.get(db)
         .then(data => this.apiData = data)
+        .catch((e) => console.error(e))
     },
     methods: {
-        singIn() {this.$emit('update:isSingIn', true)},
         notSingIn() {this.$emit('update:isSingIn', false)},
 
         reg() {
+            try {
             if (this.registerPassword !== this.registerConfirmPassword) {
                 this.warning =  "senhas não conferem"
                 return
@@ -67,12 +68,23 @@ export default {
                 this.warning = "";
                 axios.get(db)
             })
-            .then(data => {
-                this.apiData = data                
-                })
+            .then(data => {this.apiData = data})
             .catch(err => console.log(err))
-            this.singIn()
+            this.notSingIn()
+            } catch (e) {
+                console.log(e)
+            }
+            
         },
     }
 }
 </script>
+<style lang="scss">
+    .enter_register {
+        display: flex;
+        flex-direction: column;
+    }
+    input {
+            width: 100%;
+        }
+</style>

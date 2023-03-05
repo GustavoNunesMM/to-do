@@ -1,10 +1,10 @@
 <template>
     <form class="login">
 
-        <input v-model="user" 
+        <input v-model="user"  class="user"
         @keypress.enter="EnterPage()" placeholder="Usuario" >
 
-        <input type="password" id="senha" v-model="password" 
+        <input type="password" class="password" v-model="password" 
         @keypress.enter="EnterPage()" placeholder="Senha">
 
     </form>
@@ -65,8 +65,18 @@ export default {
 <style lang="scss">
 
 .login {
-    margin-left:25%;
     grid-area: 2/2/2/2;
+    width: 90%;
+
+    display:flex;
+    flex-direction: column;
+
+
+    .user .password {
+        place-self: center;
+        width: 50%;
+    }
+
   }  
 
 </style>

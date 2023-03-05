@@ -2,7 +2,6 @@
 
     <div class="visibleItem" v-for="(item, index) in user.tasks" :key="index" 
     v-show="item.isVisible">
-
       <input v-model="input" @keypress.enter="CreateSubTask(index)" 
       placeholder="Digite um novo item"> 
       
@@ -27,10 +26,13 @@
 
 </template>
 <script>
+
+
 export default {
     data() {
         return {
-            input: ""
+            input: "",
+            texto: '',
         }
     },
 
