@@ -2,22 +2,11 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { MdAdd, MdDeleteOutline, MdOutlineEdit, MdCheck, MdClose } from 'react-icons/md'
 import { useTasks } from '../store/tasks'
-
-const statusConfig: Record<TaskStatus, { label: string; dot: string }> = {
-    idle:    { label: 'Aguardando',      dot: 'bg-white/30' },
-    running: { label: 'Em andamento',    dot: 'bg-emerald-400' },
-    paused:  { label: 'Pausado',         dot: 'bg-amber-400' },
-    partial: { label: 'Parc. concluído', dot: 'bg-sky-400' },
-    done:    { label: 'Concluído',       dot: 'bg-violet-400' },
-}
+import { STATUS_CONFIG, formatDuration } from '../lib/task'
 
 interface DragState {
     itemId: number
     sourceGroupId: number | null
-}
-
-function fmt(d: durationType) {
-    return `${String(d.hours).padStart(2,'0')}:${String(d.minutes).padStart(2,'0')}`
 }
 
 function TaskCard({
@@ -46,7 +35,7 @@ function TaskCard({
     }
 
     const status = derivedStatus()
-    const { dot, label } = statusConfig[status] ?? statusConfig['idle']
+    const { dot, label } = STATUS_CONFIG[status] ?? STATUS_CONFIG['idle']
     const doneSubs = subtasks.filter(s => s.status === 'done').length
 
     return (
@@ -69,7 +58,7 @@ function TaskCard({
                         <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
                         <span className="text-white/50 text-xs">{label}</span>
                     </div>
-                    <span className="text-white/40 text-xs tabular-nums">{fmt(item.duration)}</span>
+                    <span className="text-white/40 text-xs tabular-nums">{formatDuration(item.duration)}</span>
                 </div>
                 {item.description && !hasSubs && (
                     <p className="text-white/40 text-xs line-clamp-2">{item.description}</p>
@@ -80,7 +69,7 @@ function TaskCard({
             {hasSubs && (
                 <div className="flex flex-col border border-white/20 border-t-0 rounded-b-lg overflow-hidden">
                     {subtasks.map((sub, idx) => {
-                        const { dot: sDot, label: sLabel } = statusConfig[sub.status] ?? statusConfig['idle']
+                        const { dot: sDot, label: sLabel } = STATUS_CONFIG[sub.status] ?? STATUS_CONFIG['idle']
                         return (
                             <div
                                 key={sub.id}
@@ -90,7 +79,7 @@ function TaskCard({
                                 <span className="text-white/70 text-xs flex-1 leading-tight">{sub.name}</span>
                                 <div className="flex items-center gap-1.5 shrink-0">
                                     <span className={`w-1 h-1 rounded-full ${sDot}`} />
-                                    <span className="text-white/40 text-[10px] tabular-nums">{fmt(sub.duration)}</span>
+                                    <span className="text-white/40 text-[10px] tabular-nums">{formatDuration(sub.duration)}</span>
                                 </div>
                             </div>
                         )
@@ -158,7 +147,7 @@ function Column({
 
     return (
         <div
-            className={`flex flex-col rounded-xl border transition-all duration-150 min-w-[240px] w-[240px] shrink-0 ${
+            className={`flex flex-col rounded-xl border transition-all duration-150 min-w-60 w-60 shrink-0 ${
                 isOver ? 'border-white/50 bg-white/10' : 'border-white/15 bg-white/5'
             }`}
             onDragOver={handleDragOver}
@@ -218,9 +207,9 @@ function Column({
             </div>
 
             {/* cards */}
-            <div className="flex flex-col gap-2 p-2 flex-1 min-h-[80px]">
+            <div className="flex flex-col gap-2 p-2 flex-1 min-h-20">
                 {items.length === 0 && (
-                    <div className={`flex-1 flex items-center justify-center rounded-lg border border-dashed border-white/10 min-h-[60px] transition-colors ${
+                    <div className={`flex-1 flex items-center justify-center rounded-lg border border-dashed border-white/10 min-h-15 transition-colors ${
                         isOver ? 'border-white/30 bg-white/5' : ''
                     }`}>
                         <span className="text-white/20 text-xs">Arraste aqui</span>

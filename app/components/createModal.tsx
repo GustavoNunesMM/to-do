@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { MdAdd, MdDeleteOutline } from 'react-icons/md';
 import DurationPicker from './timePicker';
 import { useTasks } from '../store/tasks';
+import { genId } from '../lib/task';
 
 interface SubtaskDraft {
     id: number
@@ -25,10 +26,7 @@ function PomodoroToggle({ value, onChange }: { value: boolean; onChange: (v: boo
             type="button"
             onClick={() => onChange(!value)}
             title={value ? 'Pomodoro ativado' : 'Pomodoro desativado'}
-            style={{
-                display: 'flex', alignItems: 'center', gap: '6px',
-                background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0,
-            }}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0 }}
         >
             <div style={{
                 width: 28, height: 16, borderRadius: 8,
@@ -44,6 +42,162 @@ function PomodoroToggle({ value, onChange }: { value: boolean; onChange: (v: boo
             </div>
             <span style={{ fontSize: '13px', lineHeight: 1 }}>🍅</span>
         </button>
+    )
+}
+
+interface HeaderProps {
+    isEditing: boolean
+    name: string
+    duration: durationType
+    pomodoroEnabled: boolean
+    onNameChange: (v: string) => void
+    onDurationChange: (v: durationType) => void
+    onPomodoroChange: (v: boolean) => void
+}
+
+function ModalHeader({ isEditing, name, duration, pomodoroEnabled, onNameChange, onDurationChange, onPomodoroChange }: HeaderProps) {
+    return (
+        <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}>
+            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 600, marginBottom: '14px' }}>
+                {isEditing ? 'Editar atividade' : 'Nova atividade'}
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Input
+                    placeholder="Nome da atividade"
+                    value={name}
+                    onChange={e => onNameChange(e.target.value)}
+                    sx={{ ...inputStyle, flex: 1 }}
+                />
+                <DurationPicker value={duration} onChange={onDurationChange} />
+                <PomodoroToggle value={pomodoroEnabled} onChange={onPomodoroChange} />
+            </div>
+        </div>
+    )
+}
+
+interface SubtaskRowProps {
+    sub: SubtaskDraft
+    index: number
+    inputRef: React.Ref<HTMLInputElement> | null
+    onUpdate: (id: number, patch: Partial<SubtaskDraft>) => void
+    onRemove: (id: number) => void
+    onErrorClear: () => void
+}
+
+function SubtaskRow({ sub, index, inputRef, onUpdate, onRemove, onErrorClear }: SubtaskRowProps) {
+    return (
+        <div style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
+            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+            borderLeft: '3px solid rgba(255,255,255,0.2)', borderRadius: '10px', padding: '8px 10px',
+        }}>
+            <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '10px', fontWeight: 600, width: '14px', textAlign: 'right', flexShrink: 0 }}>
+                {index + 1}
+            </span>
+            <input
+                ref={inputRef}
+                value={sub.name}
+                onChange={e => { onUpdate(sub.id, { name: e.target.value }); onErrorClear(); }}
+                placeholder="Nome da subtarefa"
+                style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'rgba(255,255,255,0.85)', fontSize: '13px', minWidth: 0 }}
+            />
+            <DurationPicker value={sub.duration} onChange={d => onUpdate(sub.id, { duration: d })} />
+            <PomodoroToggle value={sub.pomodoroEnabled} onChange={v => onUpdate(sub.id, { pomodoroEnabled: v })} />
+            <button
+                type="button"
+                onClick={() => onRemove(sub.id)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,100,100,0.55)', padding: '2px', flexShrink: 0, display: 'flex', alignItems: 'center' }}
+            >
+                <MdDeleteOutline size={15} />
+            </button>
+        </div>
+    )
+}
+
+interface BodyProps {
+    description: string
+    subtasks: SubtaskDraft[]
+    lastInputRef: React.RefObject<HTMLInputElement | null>
+    onDescriptionChange: (v: string) => void
+    onAddSubtask: () => void
+    onUpdateDraft: (id: number, patch: Partial<SubtaskDraft>) => void
+    onRemoveDraft: (id: number) => void
+    onErrorClear: () => void
+}
+
+function ModalBody({ description, subtasks, lastInputRef, onDescriptionChange, onAddSubtask, onUpdateDraft, onRemoveDraft, onErrorClear }: BodyProps) {
+    return (
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <Textarea
+                placeholder="Descrição (opcional)"
+                minRows={2}
+                value={description}
+                onChange={e => onDescriptionChange(e.target.value)}
+                sx={inputStyle}
+            />
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 600 }}>
+                        Subtarefas{subtasks.length > 0 ? ` · ${subtasks.length}` : ''}
+                    </span>
+                    <button
+                        type="button"
+                        onClick={onAddSubtask}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: '4px',
+                            background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.13)',
+                            borderRadius: '7px', color: 'rgba(255,255,255,0.55)', cursor: 'pointer',
+                            padding: '3px 9px', fontSize: '11px', fontWeight: 500, transition: 'background 0.15s',
+                        }}
+                    >
+                        <MdAdd size={13} /> Adicionar
+                    </button>
+                </div>
+
+                {subtasks.length === 0 && (
+                    <div style={{ border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '10px', padding: '14px', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: '12px' }}>
+                        Nenhuma subtarefa — clique em Adicionar para criar
+                    </div>
+                )}
+
+                {subtasks.map((sub, idx) => (
+                    <SubtaskRow
+                        key={sub.id}
+                        sub={sub}
+                        index={idx}
+                        inputRef={idx === subtasks.length - 1 ? lastInputRef : null}
+                        onUpdate={onUpdateDraft}
+                        onRemove={onRemoveDraft}
+                        onErrorClear={onErrorClear}
+                    />
+                ))}
+            </div>
+        </div>
+    )
+}
+
+interface FooterProps {
+    error: string
+    isEditing: boolean
+    onClose: () => void
+    onSave: () => void
+}
+
+function ModalFooter({ error, isEditing, onClose, onSave }: FooterProps) {
+    return (
+        <div style={{ padding: '12px 24px', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+            {error
+                ? <span style={{ color: 'rgba(255,100,100,0.9)', fontSize: '12px' }}>{error}</span>
+                : <span />
+            }
+            <div style={{ display: 'flex', gap: '8px' }}>
+                <Button variant="plain" onClick={onClose} sx={buttonSecondary}>Fechar</Button>
+                <Button onClick={onSave} sx={buttonPrimary}>
+                    {isEditing ? 'Salvar alterações' : 'Salvar'}
+                </Button>
+            </div>
+        </div>
     )
 }
 
@@ -85,12 +239,7 @@ export default function CreateModal({ openModal, onClose, editItem }: Props) {
     }
 
     function addSubtaskDraft() {
-        setSubtasks(prev => [...prev, {
-            id: Date.now(),
-            name: '',
-            duration: { hours: 0, minutes: 30 },
-            pomodoroEnabled: pomodoroEnabled,
-        }]);
+        setSubtasks(prev => [...prev, { id: genId(), name: '', duration: { hours: 0, minutes: 30 }, pomodoroEnabled }]);
         setTimeout(() => lastInputRef.current?.focus(), 50);
     }
 
@@ -116,7 +265,6 @@ export default function CreateModal({ openModal, onClose, editItem }: Props) {
             const draftIds  = new Set(subtasks.map(s => s.id));
 
             storeSubs.forEach(s => { if (!draftIds.has(s.id)) remove(s.id); });
-
             subtasks.forEach(sub => {
                 if (storeIds.has(sub.id)) {
                     const orig = storeSubs.find(s => s.id === sub.id)!;
@@ -126,7 +274,7 @@ export default function CreateModal({ openModal, onClose, editItem }: Props) {
                 }
             });
         } else {
-            const parentId = Date.now();
+            const parentId = genId();
             add({ name, duration, description, pomodoroEnabled }, parentId);
             subtasks.forEach(sub => {
                 addSubtask(parentId, { name: sub.name, duration: sub.duration, description: '', pomodoroEnabled: sub.pomodoroEnabled });
@@ -154,167 +302,31 @@ export default function CreateModal({ openModal, onClose, editItem }: Props) {
                 display: 'flex',
                 flexDirection: 'column',
             }}>
-                {/* cabeçalho fixo */}
-                <div style={{
-                    padding: '20px 24px 16px',
-                    borderBottom: '1px solid rgba(255,255,255,0.1)',
-                    flexShrink: 0,
-                }}>
-                    <p style={{
-                        color: 'rgba(255,255,255,0.6)',
-                        fontSize: '11px',
-                        letterSpacing: '0.1em',
-                        textTransform: 'uppercase',
-                        fontWeight: 600,
-                        marginBottom: '14px',
-                    }}>
-                        {isEditing ? 'Editar atividade' : 'Nova atividade'}
-                    </p>
-
-                    {/* nome + duração + pomodoro em linha */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <Input
-                            placeholder="Nome da atividade"
-                            value={name}
-                            onChange={e => { setName(e.target.value); setError(''); }}
-                            sx={{ ...inputStyle, flex: 1 }}
-                        />
-                        <DurationPicker value={duration} onChange={setDuration} />
-                        <PomodoroToggle value={pomodoroEnabled} onChange={setPomodoroEnabled} />
-                    </div>
-                </div>
-
-                {/* corpo scrollável */}
-                <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    <Textarea
-                        placeholder="Descrição (opcional)"
-                        minRows={2}
-                        value={description}
-                        onChange={e => setDescription(e.target.value)}
-                        sx={inputStyle}
-                    />
-
-                    {/* seção subtarefas */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        {/* label + botão adicionar */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                            <span style={{
-                                color: 'rgba(255,255,255,0.35)',
-                                fontSize: '10px',
-                                letterSpacing: '0.12em',
-                                textTransform: 'uppercase',
-                                fontWeight: 600,
-                            }}>
-                                Subtarefas{subtasks.length > 0 ? ` · ${subtasks.length}` : ''}
-                            </span>
-                            <button
-                                type="button"
-                                onClick={addSubtaskDraft}
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: '4px',
-                                    background: 'rgba(255,255,255,0.07)',
-                                    border: '1px solid rgba(255,255,255,0.13)',
-                                    borderRadius: '7px',
-                                    color: 'rgba(255,255,255,0.55)',
-                                    cursor: 'pointer',
-                                    padding: '3px 9px',
-                                    fontSize: '11px',
-                                    fontWeight: 500,
-                                    transition: 'background 0.15s',
-                                }}
-                            >
-                                <MdAdd size={13} /> Adicionar
-                            </button>
-                        </div>
-
-                        {subtasks.length === 0 && (
-                            <div style={{
-                                border: '1px dashed rgba(255,255,255,0.1)',
-                                borderRadius: '10px',
-                                padding: '14px',
-                                textAlign: 'center',
-                                color: 'rgba(255,255,255,0.2)',
-                                fontSize: '12px',
-                            }}>
-                                Nenhuma subtarefa — clique em Adicionar para criar
-                            </div>
-                        )}
-
-                        {subtasks.map((sub, idx) => (
-                            <div
-                                key={sub.id}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    background: 'rgba(255,255,255,0.05)',
-                                    border: '1px solid rgba(255,255,255,0.1)',
-                                    borderLeft: '3px solid rgba(255,255,255,0.2)',
-                                    borderRadius: '10px',
-                                    padding: '8px 10px',
-                                }}
-                            >
-                                {/* número */}
-                                <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '10px', fontWeight: 600, width: '14px', textAlign: 'right', flexShrink: 0 }}>
-                                    {idx + 1}
-                                </span>
-
-                                {/* nome */}
-                                <input
-                                    ref={idx === subtasks.length - 1 ? lastInputRef : null}
-                                    value={sub.name}
-                                    onChange={e => { updateDraft(sub.id, { name: e.target.value }); setError(''); }}
-                                    placeholder="Nome da subtarefa"
-                                    style={{
-                                        flex: 1,
-                                        background: 'transparent',
-                                        border: 'none',
-                                        outline: 'none',
-                                        color: 'rgba(255,255,255,0.85)',
-                                        fontSize: '13px',
-                                        minWidth: 0,
-                                    }}
-                                />
-
-                                {/* duração */}
-                                <DurationPicker value={sub.duration} onChange={d => updateDraft(sub.id, { duration: d })} />
-
-                                {/* pomodoro */}
-                                <PomodoroToggle value={sub.pomodoroEnabled} onChange={v => updateDraft(sub.id, { pomodoroEnabled: v })} />
-
-                                {/* deletar */}
-                                <button
-                                    type="button"
-                                    onClick={() => removeDraft(sub.id)}
-                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,100,100,0.55)', padding: '2px', flexShrink: 0, display: 'flex', alignItems: 'center' }}
-                                >
-                                    <MdDeleteOutline size={15} />
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* rodapé fixo */}
-                <div style={{
-                    padding: '12px 24px',
-                    borderTop: '1px solid rgba(255,255,255,0.1)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    flexShrink: 0,
-                }}>
-                    {error
-                        ? <span style={{ color: 'rgba(255,100,100,0.9)', fontSize: '12px' }}>{error}</span>
-                        : <span />
-                    }
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                        <Button variant="plain" onClick={onClose} sx={buttonSecondary}>Fechar</Button>
-                        <Button onClick={handleSave} sx={buttonPrimary}>
-                            {isEditing ? 'Salvar alterações' : 'Salvar'}
-                        </Button>
-                    </div>
-                </div>
+                <ModalHeader
+                    isEditing={isEditing}
+                    name={name}
+                    duration={duration}
+                    pomodoroEnabled={pomodoroEnabled}
+                    onNameChange={v => { setName(v); setError(''); }}
+                    onDurationChange={setDuration}
+                    onPomodoroChange={setPomodoroEnabled}
+                />
+                <ModalBody
+                    description={description}
+                    subtasks={subtasks}
+                    lastInputRef={lastInputRef}
+                    onDescriptionChange={setDescription}
+                    onAddSubtask={addSubtaskDraft}
+                    onUpdateDraft={updateDraft}
+                    onRemoveDraft={removeDraft}
+                    onErrorClear={() => setError('')}
+                />
+                <ModalFooter
+                    error={error}
+                    isEditing={isEditing}
+                    onClose={onClose}
+                    onSave={handleSave}
+                />
             </ModalDialog>
         </Modal>
     );

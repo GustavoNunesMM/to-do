@@ -4,6 +4,7 @@ import Clock from './clock'
 import ControllButtons from './controllButtons'
 import { useTasks } from '../store/tasks'
 import { GiTomato } from "react-icons/gi";
+import { STATUS_CONFIG, durationToSec, formatTime } from '../lib/task'
 
 type Mode = 'task' | 'pomodoro'
 
@@ -12,24 +13,6 @@ const NEAR_POMODORO_SEC = 10
 const modeConfig = {
     task:     { dot: 'bg-emerald-400', label: 'Em andamento', timeColor: 'text-white/60',      arcClass: '' },
     pomodoro: { dot: 'bg-orange-400',  label: 'Pomodoro',     timeColor: 'text-orange-300/90', arcClass: 'text-orange-400' },
-}
-
-const statusConfig: Record<TaskStatus, { label: string; dot: string }> = {
-    idle:    { label: 'Aguardando',      dot: 'bg-white/30' },
-    running: { label: 'Em andamento',    dot: 'bg-emerald-400' },
-    paused:  { label: 'Pausado',         dot: 'bg-amber-400' },
-    partial: { label: 'Parc. concluído', dot: 'bg-sky-400' },
-    done:    { label: 'Concluído',       dot: 'bg-violet-400' },
-}
-
-function durationToSec(d: Item['duration']): number {
-    return (d.hours * 60 + d.minutes) * 60
-}
-
-function formatTime(seconds: number): string {
-    const s = Math.max(0, seconds)
-    return [Math.floor(s / 3600), Math.floor((s % 3600) / 60), s % 60]
-        .map(n => String(n).padStart(2, '0')).join(':')
 }
 
 function PomodoroPanel() {
@@ -171,7 +154,6 @@ export default function ClockControl() {
                             taskElapsedRef.current = 0
                             setMode('task')
                             setPomodoroSec(null)
-                            // usa ref para garantir versão atual da função
                             startTimerRef.current(totalTaskSec)
                         }
                     }, 1000)
@@ -273,7 +255,7 @@ export default function ClockControl() {
     const isRunning  = tarefa === 'running'
     const activeCfg  = isRunning
         ? modeConfig[mode]
-        : { ...statusConfig[tarefa], timeColor: 'text-white/60', arcClass: '' }
+        : { ...STATUS_CONFIG[tarefa], timeColor: 'text-white/60', arcClass: '' }
     const totalSec   = selected ? durationToSec(selected.duration) : null
     const displaySec = mode === 'pomodoro' ? pomodoroSec : (remainingSec ?? totalSec)
 

@@ -1,5 +1,6 @@
 'use client'
 import { createContext, useContext, useReducer, useEffect, useState, ReactNode } from 'react'
+import { genId } from '../lib/task'
 
 const STORAGE_KEY        = 'tasks-state'
 const POMODORO_KEY       = 'pomodoro-config'
@@ -140,7 +141,7 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     function addGroup(name: string): Group {
         const usedColors = groups.map(g => g.color)
         const color = GROUP_COLORS.find(c => !usedColors.includes(c)) ?? GROUP_COLORS[groups.length % GROUP_COLORS.length]
-        const group: Group = { id: Date.now(), name, color }
+        const group: Group = { id: genId(), name, color }
         setGroups(prev => [...prev, group])
         return group
     }
@@ -170,8 +171,8 @@ export function TasksProvider({ children }: { children: ReactNode }) {
         hydrated,
         pomodoroConfig,
         groups,
-        add: (item, id) => dispatch({ type: 'ADD', payload: { ...item, id: id ?? Date.now(), status: 'idle' } }),
-        addSubtask: (parentId, item) => dispatch({ type: 'ADD', payload: { ...item, id: Date.now() + Math.floor(Math.random() * 1000), status: 'idle', parentId } }),
+        add: (item, id) => dispatch({ type: 'ADD', payload: { ...item, id: id ?? genId(), status: 'idle' } }),
+        addSubtask: (parentId, item) => dispatch({ type: 'ADD', payload: { ...item, id: genId(), status: 'idle', parentId } }),
         remove:         (id)                              => dispatch({ type: 'DELETE',          payload: id }),
         update:         (item)                            => dispatch({ type: 'UPDATE',          payload: item }),
         updateStatus:   (id, status)                      => dispatch({ type: 'UPDATE_STATUS',   payload: { id, status } }),
