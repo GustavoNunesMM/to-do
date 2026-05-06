@@ -33,11 +33,15 @@ function reducer(state: State, action: Action): State {
         case 'ADD':
             return { ...state, items: [...state.items, action.payload] }
 
-        case 'DELETE':
+        case 'DELETE': {
+            const idsToRemove = new Set<number>()
+            idsToRemove.add(action.payload)
+            state.items.forEach(i => { if (i.parentId === action.payload) idsToRemove.add(i.id) })
             return {
-                items: state.items.filter(i => i.id !== action.payload),
-                selectedId: state.selectedId === action.payload ? null : state.selectedId,
+                items: state.items.filter(i => !idsToRemove.has(i.id)),
+                selectedId: idsToRemove.has(state.selectedId ?? -1) ? null : state.selectedId,
             }
+        }
 
         case 'UPDATE':
             return { ...state, items: state.items.map(i => i.id === action.payload.id ? action.payload : i) }
@@ -86,7 +90,8 @@ interface ContextValue {
     hydrated: boolean
     pomodoroConfig: PomodoroConfig
     groups: Group[]
-    add:            (item: Omit<Item, 'id' | 'status'>) => void
+    add:            (item: Omit<Item, 'id' | 'status'>, id?: number) => void
+    addSubtask:     (parentId: number, item: Omit<Item, 'id' | 'status' | 'parentId'>) => void
     remove:         (id: number) => void
     update:         (item: Item) => void
     updateStatus:   (id: number, status: TaskStatus) => void
@@ -165,7 +170,8 @@ export function TasksProvider({ children }: { children: ReactNode }) {
         hydrated,
         pomodoroConfig,
         groups,
-        add: (item) => dispatch({ type: 'ADD', payload: { ...item, id: Date.now(), status: 'idle' } }),
+        add: (item, id) => dispatch({ type: 'ADD', payload: { ...item, id: id ?? Date.now(), status: 'idle' } }),
+        addSubtask: (parentId, item) => dispatch({ type: 'ADD', payload: { ...item, id: Date.now() + Math.floor(Math.random() * 1000), status: 'idle', parentId } }),
         remove:         (id)                              => dispatch({ type: 'DELETE',          payload: id }),
         update:         (item)                            => dispatch({ type: 'UPDATE',          payload: item }),
         updateStatus:   (id, status)                      => dispatch({ type: 'UPDATE_STATUS',   payload: { id, status } }),

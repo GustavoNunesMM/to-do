@@ -1,7 +1,7 @@
 export {};
 
 declare global {
-    type TaskStatus = 'idle' | 'running' | 'paused' | 'done';
+    type TaskStatus = 'idle' | 'running' | 'paused' | 'done' | 'partial';
 
     interface Item {
         name: string;
@@ -14,6 +14,7 @@ declare global {
         taskElapsed?: number;
         pomodoroEnabled?: boolean;
         groupId?: number | null;
+        parentId?: number | null;
     }
 
     interface Group {

@@ -1,7 +1,7 @@
 interface Props {
     className?: string;
     onClick?: (event: string) => void;
-    tarefa: 'idle' | 'running' | 'paused' | 'done';
+    tarefa: TaskStatus;
     disabled?: boolean;
 }
 export default function ControllButtons({ className, onClick, tarefa, disabled }: Props) {

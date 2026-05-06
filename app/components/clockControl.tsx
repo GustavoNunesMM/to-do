@@ -15,10 +15,11 @@ const modeConfig = {
 }
 
 const statusConfig: Record<TaskStatus, { label: string; dot: string }> = {
-    idle:    { label: 'Aguardando',   dot: 'bg-white/30' },
-    running: { label: 'Em andamento', dot: 'bg-emerald-400' },
-    paused:  { label: 'Pausado',      dot: 'bg-amber-400' },
-    done:    { label: 'Concluído',    dot: 'bg-violet-400' },
+    idle:    { label: 'Aguardando',      dot: 'bg-white/30' },
+    running: { label: 'Em andamento',    dot: 'bg-emerald-400' },
+    paused:  { label: 'Pausado',         dot: 'bg-amber-400' },
+    partial: { label: 'Parc. concluído', dot: 'bg-sky-400' },
+    done:    { label: 'Concluído',       dot: 'bg-violet-400' },
 }
 
 function durationToSec(d: Item['duration']): number {

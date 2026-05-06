@@ -4,10 +4,11 @@ import { MdAdd, MdDeleteOutline, MdOutlineEdit, MdCheck, MdClose } from 'react-i
 import { useTasks } from '../store/tasks'
 
 const statusConfig: Record<TaskStatus, { label: string; dot: string }> = {
-    idle:    { label: 'Aguardando',   dot: 'bg-white/30' },
-    running: { label: 'Em andamento', dot: 'bg-emerald-400' },
-    paused:  { label: 'Pausado',      dot: 'bg-amber-400' },
-    done:    { label: 'Concluído',    dot: 'bg-violet-400' },
+    idle:    { label: 'Aguardando',      dot: 'bg-white/30' },
+    running: { label: 'Em andamento',    dot: 'bg-emerald-400' },
+    paused:  { label: 'Pausado',         dot: 'bg-amber-400' },
+    partial: { label: 'Parc. concluído', dot: 'bg-sky-400' },
+    done:    { label: 'Concluído',       dot: 'bg-violet-400' },
 }
 
 interface DragState {
@@ -15,41 +16,86 @@ interface DragState {
     sourceGroupId: number | null
 }
 
+function fmt(d: durationType) {
+    return `${String(d.hours).padStart(2,'0')}:${String(d.minutes).padStart(2,'0')}`
+}
+
 function TaskCard({
     item,
+    subtasks,
     onDragStart,
     onDragEnd,
     isDragging,
 }: {
     item: Item
+    subtasks: Item[]
     onDragStart: (e: React.DragEvent, itemId: number, groupId: number | null) => void
     onDragEnd: () => void
     isDragging: boolean
 }) {
-    const { dot, label } = statusConfig[item.status] ?? statusConfig['idle']
-    const totalMin = item.duration.hours * 60 + item.duration.minutes
+    const hasSubs = subtasks.length > 0
+
+    // status derivado para pai com subtarefas
+    function derivedStatus(): TaskStatus {
+        if (!hasSubs) return item.status
+        if (subtasks.some(s => s.status === 'running')) return 'running'
+        if (subtasks.some(s => s.status === 'paused'))  return 'paused'
+        if (subtasks.every(s => s.status === 'done'))   return 'done'
+        if (subtasks.some(s => s.status === 'done'))    return 'partial'
+        return 'idle'
+    }
+
+    const status = derivedStatus()
+    const { dot, label } = statusConfig[status] ?? statusConfig['idle']
+    const doneSubs = subtasks.filter(s => s.status === 'done').length
 
     return (
         <div
             draggable
             onDragStart={e => onDragStart(e, item.id, item.groupId ?? null)}
             onDragEnd={onDragEnd}
-            className={`glass p-3 flex flex-col gap-1.5 cursor-grab active:cursor-grabbing select-none transition-all duration-150 ${
-                isDragging ? 'opacity-40 scale-95' : 'hover:bg-white/15'
-            }`}
+            className={`flex flex-col select-none transition-all duration-150 ${isDragging ? 'opacity-40 scale-95' : ''}`}
         >
-            <p className="text-white text-sm font-medium leading-tight">{item.name}</p>
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                    <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
-                    <span className="text-white/50 text-xs">{label}</span>
+            {/* card pai */}
+            <div className={`glass p-3 flex flex-col gap-1.5 cursor-grab active:cursor-grabbing ${hasSubs ? 'rounded-t-lg rounded-b-none border-b-0' : ''} hover:bg-white/15`}>
+                <div className="flex items-start justify-between gap-2">
+                    <p className="text-white text-sm font-medium leading-tight">{item.name}</p>
+                    {hasSubs && (
+                        <span className="text-white/35 text-xs tabular-nums shrink-0">{doneSubs}/{subtasks.length}</span>
+                    )}
                 </div>
-                <span className="text-white/40 text-xs tabular-nums">
-                    {String(item.duration.hours).padStart(2,'0')}:{String(item.duration.minutes).padStart(2,'0')}
-                </span>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                        <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
+                        <span className="text-white/50 text-xs">{label}</span>
+                    </div>
+                    <span className="text-white/40 text-xs tabular-nums">{fmt(item.duration)}</span>
+                </div>
+                {item.description && !hasSubs && (
+                    <p className="text-white/40 text-xs line-clamp-2">{item.description}</p>
+                )}
             </div>
-            {item.description && (
-                <p className="text-white/40 text-xs line-clamp-2">{item.description}</p>
+
+            {/* subtarefas encaixadas */}
+            {hasSubs && (
+                <div className="flex flex-col border border-white/20 border-t-0 rounded-b-lg overflow-hidden">
+                    {subtasks.map((sub, idx) => {
+                        const { dot: sDot, label: sLabel } = statusConfig[sub.status] ?? statusConfig['idle']
+                        return (
+                            <div
+                                key={sub.id}
+                                className={`flex items-center gap-2 px-3 py-1.5 bg-white/3 ${idx < subtasks.length - 1 ? 'border-b border-white/10' : ''}`}
+                            >
+                                <span className="text-white/15 text-[10px] shrink-0">└</span>
+                                <span className="text-white/70 text-xs flex-1 leading-tight">{sub.name}</span>
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                    <span className={`w-1 h-1 rounded-full ${sDot}`} />
+                                    <span className="text-white/40 text-[10px] tabular-nums">{fmt(sub.duration)}</span>
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
             )}
         </div>
     )
@@ -58,6 +104,7 @@ function TaskCard({
 function Column({
     group,
     items,
+    allItems,
     dragState,
     onDragStart,
     onDragEnd,
@@ -66,7 +113,8 @@ function Column({
     onDeleteGroup,
 }: {
     group: Group | null
-    items: Item[]
+    items: Item[]           // apenas itens raiz desta coluna
+    allItems: Item[]        // todos os itens (para buscar subtarefas)
     dragState: DragState | null
     onDragStart: (e: React.DragEvent, itemId: number, groupId: number | null) => void
     onDragEnd: () => void
@@ -182,6 +230,7 @@ function Column({
                     <TaskCard
                         key={item.id}
                         item={item}
+                        subtasks={allItems.filter(i => i.parentId === item.id)}
                         onDragStart={onDragStart}
                         onDragEnd={onDragEnd}
                         isDragging={dragState?.itemId === item.id}
@@ -269,7 +318,9 @@ export default function GroupsPage({ open, onClose, onRequestClose }: { open: bo
         setDragState(null)
     }, [dragState, setItemGroup])
 
-    const ungrouped = items.filter(i => !i.groupId || !groups.find(g => g.id === i.groupId))
+    // somente raiz (sem parentId)
+    const roots = items.filter(i => !i.parentId)
+    const ungrouped = roots.filter(i => !i.groupId || !groups.find(g => g.id === i.groupId))
 
     return (
         <div className={`fixed inset-0 z-50 flex flex-col ${animClass}`} style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(24px)', borderLeft: '1px solid rgba(255,255,255,0.1)' }}>
@@ -295,6 +346,7 @@ export default function GroupsPage({ open, onClose, onRequestClose }: { open: bo
                     <Column
                         group={null}
                         items={ungrouped}
+                        allItems={items}
                         dragState={dragState}
                         onDragStart={handleDragStart}
                         onDragEnd={handleDragEnd}
@@ -308,7 +360,8 @@ export default function GroupsPage({ open, onClose, onRequestClose }: { open: bo
                         <Column
                             key={group.id}
                             group={group}
-                            items={items.filter(i => i.groupId === group.id)}
+                            items={roots.filter(i => i.groupId === group.id)}
+                            allItems={items}
                             dragState={dragState}
                             onDragStart={handleDragStart}
                             onDragEnd={handleDragEnd}

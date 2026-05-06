@@ -4,6 +4,15 @@ input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 input[type=number] { -moz-appearance: textfield; }
 
+@keyframes subtasks-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.subtasks-enter {
+  animation: subtasks-in 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
 @keyframes groups-in {
   from { opacity: 0; transform: translateX(-40px); }
   to   { opacity: 1; transform: translateX(0); }
