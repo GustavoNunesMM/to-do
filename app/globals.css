@@ -1,5 +1,27 @@
 @import "tailwindcss";
 
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=number] { -moz-appearance: textfield; }
+
+@keyframes groups-in {
+  from { opacity: 0; transform: translateX(-40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes groups-out {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-40px); }
+}
+
+.groups-enter {
+  animation: groups-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.groups-exit {
+  animation: groups-out 0.25s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+}
+
 @layer utilities {
   .glass {
     @apply bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl;

@@ -4,9 +4,16 @@ import LatButtons from './components/latButtons';
 import CreateModal from './components/createModal';
 import { useState } from "react";
 import ClockControl from './components/clockControl'
+import GroupsPage from './components/groupsPage'
+import GroupsTrigger from './components/groupsTrigger'
 
 export default function Home() {
     const [openCreateModal, setOpenCreateModal] = useState(false);
+    const [groupsMounted, setGroupsMounted] = useState(false);
+    const [groupsOpen, setGroupsOpen]       = useState(false);
+
+    function openGroups()  { setGroupsMounted(true); setGroupsOpen(true) }
+    function closeGroups() { setGroupsOpen(false) }   // animação dispara; GroupsPage chama onClose ao fim
 
     return (
         <>
@@ -20,6 +27,14 @@ export default function Home() {
                 openModal={openCreateModal}
                 onClose={() => setOpenCreateModal(false)}
             />
+            <GroupsTrigger onOpen={openGroups} />
+            {groupsMounted && (
+                <GroupsPage
+                    open={groupsOpen}
+                    onRequestClose={closeGroups}
+                    onClose={() => setGroupsMounted(false)}
+                />
+            )}
         </>
     );
 }

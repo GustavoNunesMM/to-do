@@ -9,6 +9,22 @@ declare global {
         duration: durationType;
         description: string;
         status: TaskStatus;
+        savedProgress?: number;
+        savedRemainingSec?: number;
+        taskElapsed?: number;
+        pomodoroEnabled?: boolean;
+        groupId?: number | null;
+    }
+
+    interface Group {
+        id: number;
+        name: string;
+        color: string;
+    }
+
+    interface PomodoroConfig {
+        intervalMin: number;
+        breakMin: number;
     }
 
     interface durationType {

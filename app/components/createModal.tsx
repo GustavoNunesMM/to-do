@@ -13,16 +13,18 @@ interface Props {
 
 export default function CreateModal({ openModal, onClose, editItem }: Props) {
     const { add, update } = useTasks();
-    const [name, setName] = useState('');
-    const [duration, setDuration] = useState({ hours: 0, minutes: 30 });
-    const [description, setDescription] = useState('');
-    const [error, setError] = useState('');
+    const [name, setName]                       = useState('');
+    const [duration, setDuration]               = useState({ hours: 0, minutes: 30 });
+    const [description, setDescription]         = useState('');
+    const [pomodoroEnabled, setPomodoroEnabled] = useState(true);
+    const [error, setError]                     = useState('');
 
     useEffect(() => {
         if (editItem) {
             setName(editItem.name);
             setDuration(editItem.duration);
             setDescription(editItem.description);
+            setPomodoroEnabled(editItem.pomodoroEnabled ?? true);
         } else {
             clear();
         }
@@ -32,6 +34,7 @@ export default function CreateModal({ openModal, onClose, editItem }: Props) {
         setName('');
         setDuration({ hours: 0, minutes: 30 });
         setDescription('');
+        setPomodoroEnabled(true);
         setError('');
     }
 
@@ -41,9 +44,9 @@ export default function CreateModal({ openModal, onClose, editItem }: Props) {
             return;
         }
         if (editItem) {
-            update({ ...editItem, name, duration, description });
+            update({ ...editItem, name, duration, description, pomodoroEnabled });
         } else {
-            add({ name, duration, description });
+            add({ name, duration, description, pomodoroEnabled });
         }
         clear();
         onClose();
@@ -98,13 +101,52 @@ export default function CreateModal({ openModal, onClose, editItem }: Props) {
                         </p>
                     )}
 
-                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '6px' }}>
-                        <Button variant="plain" onClick={onClose} sx={buttonSecondary}>
-                            Fechar
-                        </Button>
-                        <Button onClick={handleSave} sx={buttonPrimary}>
-                            {editItem ? 'Salvar alterações' : 'Salvar'}
-                        </Button>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '6px' }}>
+                        {/* toggle pomodoro */}
+                        <button
+                            type="button"
+                            onClick={() => setPomodoroEnabled(v => !v)}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: 0,
+                            }}
+                        >
+                            <div style={{
+                                width: 36, height: 20,
+                                borderRadius: 10,
+                                backgroundColor: pomodoroEnabled ? 'rgba(251,146,60,0.6)' : 'rgba(255,255,255,0.15)',
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                position: 'relative',
+                                transition: 'background-color 0.25s',
+                                flexShrink: 0,
+                            }}>
+                                <div style={{
+                                    position: 'absolute',
+                                    top: 2, left: pomodoroEnabled ? 18 : 2,
+                                    width: 14, height: 14,
+                                    borderRadius: '50%',
+                                    backgroundColor: 'white',
+                                    transition: 'left 0.25s',
+                                }} />
+                            </div>
+                            <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>
+                                🍅 Pomodoro {pomodoroEnabled ? 'ativado' : 'desativado'}
+                            </span>
+                        </button>
+
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <Button variant="plain" onClick={onClose} sx={buttonSecondary}>
+                                Fechar
+                            </Button>
+                            <Button onClick={handleSave} sx={buttonPrimary}>
+                                {editItem ? 'Salvar alterações' : 'Salvar'}
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </ModalDialog>
