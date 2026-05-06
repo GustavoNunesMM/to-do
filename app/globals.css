@@ -38,6 +38,7 @@
     );
     opacity: 0;
     transition: opacity 0.3s;
+    pointer-events: none;
   }
 
   .btn-glass:hover::before {

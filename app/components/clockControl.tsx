@@ -2,11 +2,7 @@
 import { useState, useRef } from "react";
 import Clock from './clock'
 import ControllButtons from './controllButtons'
-
-interface Props {
-    selectedItem?: Item
-    onStatusChange?: (id: number, status: TaskStatus) => void
-}
+import { useTasks } from '../store/tasks'
 
 const statusConfig: Record<TaskStatus, { label: string; dot: string }> = {
     idle:    { label: 'Aguardando',    dot: 'bg-white/30' },
@@ -31,7 +27,8 @@ function formatTime(seconds: number): string {
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
 }
 
-export default function ClockControl({ selectedItem, onStatusChange }: Props) {
+export default function ClockControl() {
+    const { selected, updateStatus } = useTasks()
     const [progress, setProgress] = useState(0)
     const [remainingSec, setRemainingSec] = useState<number | null>(null)
     const [tarefa, setTarefa] = useState<TaskStatus>('idle')
@@ -40,7 +37,7 @@ export default function ClockControl({ selectedItem, onStatusChange }: Props) {
 
     function notify(status: TaskStatus) {
         setTarefa(status)
-        if (selectedItem) onStatusChange?.(selectedItem.id, status)
+        if (selected) updateStatus(selected.id, status)
     }
 
     function clearAll() {
@@ -49,9 +46,9 @@ export default function ClockControl({ selectedItem, onStatusChange }: Props) {
     }
 
     function startFunc() {
-        if (progressRef.current || !selectedItem) return
-        const totalMs = durationToMs(selectedItem.duration)
-        const totalSec = durationToSec(selectedItem.duration)
+        if (progressRef.current || !selected) return
+        const totalMs = durationToMs(selected.duration)
+        const totalSec = durationToSec(selected.duration)
 
         setRemainingSec(prev => prev ?? totalSec)
 
@@ -81,7 +78,7 @@ export default function ClockControl({ selectedItem, onStatusChange }: Props) {
     function stopFunc() {
         clearAll()
         setProgress(0)
-        setRemainingSec(selectedItem ? durationToSec(selectedItem.duration) : null)
+        setRemainingSec(selected ? durationToSec(selected.duration) : null)
         notify('idle')
     }
 
@@ -95,7 +92,7 @@ export default function ClockControl({ selectedItem, onStatusChange }: Props) {
     }
 
     const { label, dot } = statusConfig[tarefa]
-    const totalSec = selectedItem ? durationToSec(selectedItem.duration) : null
+    const totalSec = selected ? durationToSec(selected.duration) : null
     const displaySec = remainingSec ?? totalSec
 
     return (
@@ -112,8 +109,8 @@ export default function ClockControl({ selectedItem, onStatusChange }: Props) {
                                 {formatTime(displaySec)} Restantes
                             </p>
                         )}
-                        {selectedItem
-                            ? <p className="text-white text-xl font-semibold tracking-wide">{selectedItem.name}</p>
+                        {selected
+                            ? <p className="text-white text-xl font-semibold tracking-wide">{selected.name}</p>
                             : <p className="text-white/30 text-xl font-semibold tracking-wide">Nenhuma tarefa</p>
                         }
                         <div className="flex items-center gap-1.5">
@@ -124,7 +121,7 @@ export default function ClockControl({ selectedItem, onStatusChange }: Props) {
                     <ControllButtons
                         onClick={controllButtons}
                         tarefa={tarefa}
-                        disabled={!selectedItem}
+                        disabled={!selected}
                     />
                 </div>
             </div>
