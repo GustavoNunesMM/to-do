@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .glass {
+    @apply bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl;
+    border-radius: 0.5rem;
+  }
+  .btn-glass {
+    @apply bg-white/10 backdrop-blur-md border py-[0.6rem] px-[1.2rem] border-white/20 text-white font-medium;
+    border-radius: 0.75rem;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-glass:hover {
+    @apply bg-white/20 border-white/30;
+    transform: translateY(-1px);
+  }
+
+  .btn-glass:active {
+    transform: scale(0.97);
+  }
+
+  .btn-glass:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.3);
+  }
+
+  .btn-glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+            120deg,
+            rgba(255,255,255,0.25),
+            rgba(255,255,255,0.05)
+    );
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .btn-glass:hover::before {
+    opacity: 1;
+  }
+}
