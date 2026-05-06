@@ -14,13 +14,15 @@ interface Props {
     openModal: boolean;
     onClose: () => void;
     addItem: (item: any) => void;
+    itens: Item[];
 }
 
-export default function CreateModal({ openModal, onClose, addItem }: Props) {
+export default function CreateModal({ openModal, onClose, addItem, itens }: Props) {
     const [name, setName] = useState('');
     const [duration, setDuration] = useState({ hours: 0, minutes: 30 });
     const [description, setDescription] = useState('');
     const [error, setError] = useState('');
+
 
     function clear() {
         setName('');
@@ -36,7 +38,7 @@ export default function CreateModal({ openModal, onClose, addItem }: Props) {
         }
 
         addItem({
-            name, duration, description
+            name, duration, description, status: 'idle', id: itens.length + 1,
         })
         clear();
         onClose();

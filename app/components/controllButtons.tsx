@@ -1,16 +1,10 @@
-interface button {
-    title: string;
-    icon?: string;
-    action?: () => void;
-    condition?: boolean;
-}
-
 interface Props {
     className?: string;
     onClick?: (event: string) => void;
     tarefa: 'idle' | 'running' | 'paused' | 'done';
+    disabled?: boolean;
 }
-export default function ControllButtons({ className, onClick,  tarefa }: Props) {
+export default function ControllButtons({ className, onClick, tarefa, disabled }: Props) {
 
     function getButtons() {
         if (tarefa === 'idle') {
@@ -45,9 +39,14 @@ export default function ControllButtons({ className, onClick,  tarefa }: Props) 
     const buttons = getButtons()
 
     return (
-        <div className={`flex flex-row gap-2  place-self-center ${className}`}>
+        <div className={`flex flex-row gap-2 place-self-center ${className}`}>
             {buttons.map((button, index) => (
-                <button key={index} onClick={button.action} className="btn-glass">
+                <button
+                    key={index}
+                    onClick={button.action}
+                    disabled={disabled}
+                    className="btn-glass disabled:opacity-30 disabled:cursor-not-allowed disabled:pointer-events-none"
+                >
                     {button.title}
                 </button>
             ))}
