@@ -23,6 +23,14 @@ export const metadata: Metadata = {
   },
 };
 
+// Script inline que desregistra qualquer service worker em dev ou no WebView Flutter.
+// Em produção o SW é gerenciado pelo next-pwa normalmente.
+const unregisterSW = `
+if ('serviceWorker' in navigator && (location.hostname === 'localhost' || navigator.userAgent.includes('wv'))) {
+  navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+}
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -33,6 +41,9 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased bg-[url('/assets/bg.jpg')] bg-no-repeat bg-cover`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: unregisterSW }} />
+      </head>
       <body className="min-h-full flex flex-col"><TasksProvider>{children}</TasksProvider></body>
     </html>
   );

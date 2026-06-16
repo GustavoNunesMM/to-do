@@ -5,6 +5,7 @@ import ControllButtons from './controllButtons'
 import { useTasks } from '../store/tasks'
 import { GiTomato } from "react-icons/gi";
 import { STATUS_CONFIG, durationToSec, formatTime } from '../lib/task'
+import { notifyPomodoroBreak, notifyTaskDone } from '../lib/flutter_bridge'
 
 type Mode = 'task' | 'pomodoro'
 
@@ -125,6 +126,7 @@ export default function ClockControl() {
                         if (sel) {
                             updateStatusRef.current(sel.id, 'done')
                             updateProgressRef.current(sel.id, 100, 0, taskElapsedRef.current)
+                            notifyTaskDone(sel.name)
                         }
                     }, 0)
                 }
@@ -138,6 +140,7 @@ export default function ClockControl() {
                 if (taskElapsedRef.current % intervalSec === 0) {
                     clearTimer()
                     setNearPomodoro(false)
+                    notifyPomodoroBreak()
                     const breakSec = cfg.breakMin * 60
                     modeRef.current = 'pomodoro'
                     pomSecRef.current = breakSec

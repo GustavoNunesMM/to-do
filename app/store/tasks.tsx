@@ -126,8 +126,9 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     }, [])
 
     useEffect(() => {
+        if (!hydrated) return
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)) } catch {}
-    }, [state])
+    }, [state, hydrated])
 
     useEffect(() => {
         try { localStorage.setItem(GROUPS_KEY, JSON.stringify(groups)) } catch {}

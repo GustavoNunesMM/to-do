@@ -7,13 +7,7 @@ const nextConfig: NextConfig = {
         if (dev) {
             config.watchOptions = {
                 ...config.watchOptions,
-                ignored: [
-                    '**/node_modules/**',
-                    '**/.next/**',
-                    '**/public/sw.js',
-                    '**/public/workbox-*.js',
-                    '**/public/swe-worker-*.js',
-                ],
+                ignored: /node_modules|\.next|flutter_app[\\/]build|public[\\/](sw\.js|workbox-|swe-worker-)/,
             };
         }
         return config;
@@ -21,12 +15,11 @@ const nextConfig: NextConfig = {
 };
 
 module.exports = (phase: string) => {
-    if (phase === PHASE_DEVELOPMENT_SERVER || phase === PHASE_PRODUCTION_BUILD) {
+    if (phase === PHASE_PRODUCTION_BUILD) {
         const withPWA = require('@ducanh2912/next-pwa').default({
             dest: 'public',
             cacheOnFrontEndNav: true,
-            reloadOnOnline: true,
-            disable: process.env.NODE_ENV === 'development',
+            reloadOnOnline: false,
         });
         return withPWA(nextConfig);
     }
