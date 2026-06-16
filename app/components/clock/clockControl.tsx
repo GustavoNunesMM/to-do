@@ -1,11 +1,11 @@
 'use client'
 import { useState, useRef, useEffect } from "react";
 import Clock from './clock'
-import ControllButtons from './controllButtons'
-import { useTasks } from '../store/tasks'
+import ControllButtons from '../controllButtons'
+import { useTasks } from '../../store/tasks'
 import { GiTomato } from "react-icons/gi";
-import { STATUS_CONFIG, durationToSec, formatTime } from '../lib/task'
-import { notifyPomodoroBreak, notifyTaskDone } from '../lib/flutter_bridge'
+import { STATUS_CONFIG, durationToSec, formatTime } from '../../lib/task'
+import { notifyPomodoroBreak, notifyTaskDone } from '../../lib/flutter_bridge'
 
 type Mode = 'task' | 'pomodoro'
 

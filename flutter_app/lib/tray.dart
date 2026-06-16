@@ -11,7 +11,7 @@ class AppTray with TrayListener {
 
   Future<void> init() async {
     trayManager.addListener(this);
-    await trayManager.setIcon('assets/tray_icon.ico');
+    await trayManager.setIcon('assets/icon.ico');
     await trayManager.setToolTip('To-Do Timer');
     await _settings.checkStartupEnabled();
     await _buildMenu();

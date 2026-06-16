@@ -3,9 +3,9 @@
 import { Modal, ModalDialog, Input, Textarea, Button } from '@mui/joy';
 import { useState, useEffect, useRef } from 'react';
 import { MdAdd, MdDeleteOutline } from 'react-icons/md';
-import DurationPicker from './timePicker';
-import { useTasks } from '../store/tasks';
-import { genId } from '../lib/task';
+import DurationPicker from '../timePicker';
+import { useTasks } from '../../store/tasks';
+import { genId } from '../../lib/task';
 
 interface SubtaskDraft {
     id: number
@@ -116,16 +116,20 @@ function SubtaskRow({ sub, index, inputRef, onUpdate, onRemove, onErrorClear }: 
 
 interface BodyProps {
     description: string
+    scheduledDate: string
+    scheduledTime: string
     subtasks: SubtaskDraft[]
     lastInputRef: React.RefObject<HTMLInputElement | null>
     onDescriptionChange: (v: string) => void
+    onScheduledDateChange: (v: string) => void
+    onScheduledTimeChange: (v: string) => void
     onAddSubtask: () => void
     onUpdateDraft: (id: number, patch: Partial<SubtaskDraft>) => void
     onRemoveDraft: (id: number) => void
     onErrorClear: () => void
 }
 
-function ModalBody({ description, subtasks, lastInputRef, onDescriptionChange, onAddSubtask, onUpdateDraft, onRemoveDraft, onErrorClear }: BodyProps) {
+function ModalBody({ description, scheduledDate, scheduledTime, subtasks, lastInputRef, onDescriptionChange, onScheduledDateChange, onScheduledTimeChange, onAddSubtask, onUpdateDraft, onRemoveDraft, onErrorClear }: BodyProps) {
     return (
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <Textarea
@@ -135,6 +139,37 @@ function ModalBody({ description, subtasks, lastInputRef, onDescriptionChange, o
                 onChange={e => onDescriptionChange(e.target.value)}
                 sx={inputStyle}
             />
+
+            {/* agendamento opcional */}
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 600, flexShrink: 0 }}>
+                    Agendar
+                </span>
+                <input
+                    type="date"
+                    value={scheduledDate}
+                    onChange={e => onScheduledDateChange(e.target.value)}
+                    style={{
+                        flex: 1, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)',
+                        borderRadius: 10, color: scheduledDate ? '#fff' : 'rgba(255,255,255,0.3)',
+                        padding: '6px 10px', fontSize: 13, outline: 'none',
+                        colorScheme: 'dark',
+                    }}
+                />
+                <input
+                    type="time"
+                    value={scheduledTime}
+                    onChange={e => onScheduledTimeChange(e.target.value)}
+                    disabled={!scheduledDate}
+                    style={{
+                        width: 90, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)',
+                        borderRadius: 10, color: scheduledDate ? '#fff' : 'rgba(255,255,255,0.2)',
+                        padding: '6px 10px', fontSize: 13, outline: 'none',
+                        colorScheme: 'dark',
+                        opacity: scheduledDate ? 1 : 0.4, cursor: scheduledDate ? 'auto' : 'not-allowed',
+                    }}
+                />
+            </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
@@ -207,6 +242,8 @@ export default function CreateModal({ openModal, onClose, editItem }: Props) {
     const [duration, setDuration]               = useState<durationType>({ hours: 0, minutes: 30 });
     const [description, setDescription]         = useState('');
     const [pomodoroEnabled, setPomodoroEnabled] = useState(true);
+    const [scheduledDate, setScheduledDate]     = useState('');
+    const [scheduledTime, setScheduledTime]     = useState('');
     const [error, setError]                     = useState('');
     const [subtasks, setSubtasks]               = useState<SubtaskDraft[]>([]);
     const lastInputRef = useRef<HTMLInputElement | null>(null);
@@ -217,6 +254,8 @@ export default function CreateModal({ openModal, onClose, editItem }: Props) {
             setDuration(editItem.duration);
             setDescription(editItem.description);
             setPomodoroEnabled(editItem.pomodoroEnabled ?? true);
+            setScheduledDate(editItem.scheduledDate ?? '');
+            setScheduledTime(editItem.scheduledTime ?? '');
             const existingSubs = items.filter(i => i.parentId === editItem.id);
             setSubtasks(existingSubs.map(s => ({
                 id: s.id,
@@ -234,6 +273,8 @@ export default function CreateModal({ openModal, onClose, editItem }: Props) {
         setDuration({ hours: 0, minutes: 30 });
         setDescription('');
         setPomodoroEnabled(true);
+        setScheduledDate('');
+        setScheduledTime('');
         setError('');
         setSubtasks([]);
     }
@@ -257,8 +298,11 @@ export default function CreateModal({ openModal, onClose, editItem }: Props) {
             if (sub.name.trim().length <= 1) { setError('Subtarefa precisa ter pelo menos 2 caracteres'); return; }
         }
 
+        const sDate = scheduledDate || null
+        const sTime = scheduledDate && scheduledTime ? scheduledTime : null
+
         if (editItem) {
-            update({ ...editItem, name, duration, description, pomodoroEnabled });
+            update({ ...editItem, name, duration, description, pomodoroEnabled, scheduledDate: sDate, scheduledTime: sTime });
 
             const storeSubs = items.filter(i => i.parentId === editItem.id);
             const storeIds  = new Set(storeSubs.map(i => i.id));
@@ -275,7 +319,7 @@ export default function CreateModal({ openModal, onClose, editItem }: Props) {
             });
         } else {
             const parentId = genId();
-            add({ name, duration, description, pomodoroEnabled }, parentId);
+            add({ name, duration, description, pomodoroEnabled, scheduledDate: sDate, scheduledTime: sTime }, parentId);
             subtasks.forEach(sub => {
                 addSubtask(parentId, { name: sub.name, duration: sub.duration, description: '', pomodoroEnabled: sub.pomodoroEnabled });
             });
@@ -313,9 +357,13 @@ export default function CreateModal({ openModal, onClose, editItem }: Props) {
                 />
                 <ModalBody
                     description={description}
+                    scheduledDate={scheduledDate}
+                    scheduledTime={scheduledTime}
                     subtasks={subtasks}
                     lastInputRef={lastInputRef}
                     onDescriptionChange={setDescription}
+                    onScheduledDateChange={setScheduledDate}
+                    onScheduledTimeChange={setScheduledTime}
                     onAddSubtask={addSubtaskDraft}
                     onUpdateDraft={updateDraft}
                     onRemoveDraft={removeDraft}

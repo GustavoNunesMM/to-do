@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { MdAdd, MdDeleteOutline, MdOutlineEdit, MdExpandMore } from "react-icons/md";
 import { useTasks } from '../store/tasks'
-import CreateModal from './createModal'
+import CreateModal from './modal/createModal'
 import { STATUS_CONFIG, durationToSec, formatRemaining, formatDuration, formatSec } from '../lib/task'
 
 function AnimatedSubtasks({ open, children }: { open: boolean; children: React.ReactNode }) {

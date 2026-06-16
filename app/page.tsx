@@ -1,19 +1,25 @@
 'use client';
 
 import LatButtons from './components/latButtons';
-import CreateModal from './components/createModal';
+import CreateModal from './components/modal/createModal';
 import { useState } from "react";
-import ClockControl from './components/clockControl'
-import GroupsPage from './components/groupsPage'
-import GroupsTrigger from './components/groupsTrigger'
+import ClockControl from './components/clock/clockControl'
+import GroupsPage from './components/group/groupsPage'
+import GroupsTrigger from './components/group/groupsTrigger'
+import CalendarTrigger from './components/calendar/calendarTrigger'
+import CalendarPage from './components/calendar/calendarPage'
 
 export default function Home() {
     const [openCreateModal, setOpenCreateModal] = useState(false);
     const [groupsMounted, setGroupsMounted] = useState(false);
     const [groupsOpen, setGroupsOpen]       = useState(false);
+    const [calendarMounted, setCalendarMounted] = useState(false);
+    const [calendarOpen, setCalendarOpen]       = useState(false);
 
-    function openGroups()  { setGroupsMounted(true); setGroupsOpen(true) }
-    function closeGroups() { setGroupsOpen(false) }   // animação dispara; GroupsPage chama onClose ao fim
+    function openGroups()    { setGroupsMounted(true); setGroupsOpen(true) }
+    function closeGroups()   { setGroupsOpen(false) }
+    function openCalendar()  { setCalendarMounted(true); setCalendarOpen(true) }
+    function closeCalendar() { setCalendarOpen(false) }
 
     return (
         <>
@@ -33,6 +39,14 @@ export default function Home() {
                     open={groupsOpen}
                     onRequestClose={closeGroups}
                     onClose={() => setGroupsMounted(false)}
+                />
+            )}
+            <CalendarTrigger onOpen={openCalendar} />
+            {calendarMounted && (
+                <CalendarPage
+                    open={calendarOpen}
+                    onRequestClose={closeCalendar}
+                    onClose={() => setCalendarMounted(false)}
                 />
             )}
         </>

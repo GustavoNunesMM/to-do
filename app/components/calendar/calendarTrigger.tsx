@@ -2,23 +2,23 @@
 import { useEffect, useRef, useState } from 'react'
 
 const HOVER_DELAY_MS = 2000
-const EDGE_WIDTH = 28  
-const TRIGGER_X  = 60  
+const EDGE_WIDTH = 28
+const TRIGGER_X  = 60
 
-export default function GroupsTrigger({ onOpen }: { onOpen: () => void }) {
-    const [visible, setVisible]   = useState(false)   // semicírculo visível
-    const [filling, setFilling]   = useState(false)   // animação de preenchimento
+export default function CalendarTrigger({ onOpen }: { onOpen: () => void }) {
+    const [visible, setVisible] = useState(false)
+    const [filling, setFilling] = useState(false)
     const timerRef  = useRef<NodeJS.Timeout | null>(null)
     const fillStart = useRef<number | null>(null)
     const rafRef    = useRef<number | null>(null)
-    const [fillPct, setFillPct]   = useState(0)
+    const [fillPct, setFillPct] = useState(0)
 
     useEffect(() => {
         function onMouseMove(e: MouseEvent) {
-            const nearEdge = e.clientX <= EDGE_WIDTH
+            const nearEdge = e.clientX >= window.innerWidth - EDGE_WIDTH
             if (nearEdge) {
                 setVisible(true)
-            } else if (e.clientX > TRIGGER_X) {
+            } else if (e.clientX < window.innerWidth - TRIGGER_X) {
                 setVisible(false)
                 cancelFill()
             }
@@ -60,14 +60,12 @@ export default function GroupsTrigger({ onOpen }: { onOpen: () => void }) {
 
     if (!visible) return null
 
-    // semicírculo abre para a direita: centro em x=0, arco de (0,0) até (0, R*2) passando por (R, R)
-    // M 0 0 A R R 0 0 0 0 R*2 Z  (sweep-flag=0 → sentido anti-horário → abre para direita)
-    const arcPath  = `M 0 0 A ${R} ${R} 0 0 0 0 ${R * 2} Z`
-    const arcStroke = `M 0 0 A ${R} ${R} 0 0 0 0 ${R * 2}`
+    const arcPath   = `M ${R} 0 A ${R} ${R} 0 0 1 ${R} ${R * 2} Z`
+    const arcStroke = `M ${R} 0 A ${R} ${R} 0 0 1 ${R} ${R * 2}`
 
     return (
         <div
-            className="fixed left-0 top-1/2 -translate-y-1/2 z-40 cursor-pointer"
+            className="fixed right-0 top-1/2 -translate-y-1/2 z-40 cursor-pointer"
             style={{ width: R, height: R * 2 }}
             onMouseEnter={startFill}
             onMouseLeave={cancelFill}
@@ -79,7 +77,6 @@ export default function GroupsTrigger({ onOpen }: { onOpen: () => void }) {
                 viewBox={`0 0 ${R} ${R * 2}`}
                 overflow="visible"
             >
-                {/* fundo do semicírculo */}
                 <path
                     d={arcPath}
                     fill="rgba(255,255,255,0.08)"
@@ -87,7 +84,6 @@ export default function GroupsTrigger({ onOpen }: { onOpen: () => void }) {
                     strokeWidth="1"
                 />
 
-                {/* arco de preenchimento */}
                 {filling && (
                     <path
                         d={arcStroke}
@@ -101,9 +97,8 @@ export default function GroupsTrigger({ onOpen }: { onOpen: () => void }) {
                     />
                 )}
 
-                {/* texto vertical centralizado no semicírculo */}
                 <text
-                    x={R * 0.45}
+                    x={R * 0.55}
                     y={R}
                     textAnchor="middle"
                     dominantBaseline="middle"
@@ -111,10 +106,10 @@ export default function GroupsTrigger({ onOpen }: { onOpen: () => void }) {
                     fontSize="11"
                     fontWeight="600"
                     letterSpacing="2"
-                    transform={`rotate(90, ${R * 0.45}, ${R})`}
+                    transform={`rotate(90, ${R * 0.55}, ${R})`}
                     style={{ userSelect: 'none' }}
                 >
-                    GRUPOS
+                    AGENDA
                 </text>
             </svg>
         </div>

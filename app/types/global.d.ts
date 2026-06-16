@@ -15,6 +15,8 @@ declare global {
         pomodoroEnabled?: boolean;
         groupId?: number | null;
         parentId?: number | null;
+        scheduledDate?: string | null;
+        scheduledTime?: string | null;
     }
 
     interface Group {

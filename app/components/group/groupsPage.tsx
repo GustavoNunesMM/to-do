@@ -1,8 +1,8 @@
 'use client'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { MdAdd, MdDeleteOutline, MdOutlineEdit, MdCheck, MdClose } from 'react-icons/md'
-import { useTasks } from '../store/tasks'
-import { STATUS_CONFIG, formatDuration } from '../lib/task'
+import { useTasks } from '../../store/tasks'
+import { STATUS_CONFIG, formatDuration } from '../../lib/task'
 
 interface DragState {
     itemId: number
