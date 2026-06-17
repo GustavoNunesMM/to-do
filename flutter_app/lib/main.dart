@@ -10,9 +10,6 @@ import 'webview_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Move o cache do WebView2 para fora da pasta do projeto.
-  // O padrão é salvar ao lado do .exe, dentro de flutter_app/build/,
-  // o que faz o webpack watch do Next.js detectar escritas e rebuildar infinitamente.
   WebViewEnvironment? webViewEnvironment;
   if (Platform.isWindows) {
     final localAppData = Platform.environment['LOCALAPPDATA'] ?? '';

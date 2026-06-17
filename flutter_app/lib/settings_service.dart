@@ -6,6 +6,9 @@ const _keyStartup = 'startup_enabled';
 const _keyVolume = 'sound_volume';
 const _keySoundFile = 'sound_file';
 const _keyMinimizeOnClose = 'minimize_on_close';
+const _keyAmbientEnabled = 'ambient_enabled';
+const _keyAmbientFile    = 'ambient_file';
+const _keyAmbientVolume  = 'ambient_volume';
 const _appName = 'ToDoTimer';
 
 String get _exePath => Platform.resolvedExecutable;
@@ -39,6 +42,26 @@ class SettingsService {
 
   Future<void> setSoundFile(String name) async {
     await _prefs.setString(_keySoundFile, name);
+  }
+
+  // ── Som ambiente ──────────────────────────────────────────────────────────
+
+  bool get ambientEnabled => _prefs.getBool(_keyAmbientEnabled) ?? false;
+
+  Future<void> setAmbientEnabled(bool value) async {
+    await _prefs.setBool(_keyAmbientEnabled, value);
+  }
+
+  String get ambientFile => _prefs.getString(_keyAmbientFile) ?? 'rain.mp3';
+
+  Future<void> setAmbientFile(String name) async {
+    await _prefs.setString(_keyAmbientFile, name);
+  }
+
+  double get ambientVolume => (_prefs.getInt(_keyAmbientVolume) ?? 40) / 100.0;
+
+  Future<void> setAmbientVolume(int value) async {
+    await _prefs.setInt(_keyAmbientVolume, value.clamp(0, 100));
   }
 
   // ── Minimizar ao fechar ────────────────────────────────────────────────────

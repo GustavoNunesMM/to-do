@@ -1,13 +1,9 @@
 'use client'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { MdAdd, MdDeleteOutline, MdOutlineEdit, MdCheck, MdClose } from 'react-icons/md'
-import { useTasks } from '../../store/tasks'
-import { STATUS_CONFIG, formatDuration } from '../../lib/task'
-
-interface DragState {
-    itemId: number
-    sourceGroupId: number | null
-}
+import { useTasks } from '@/app/store/tasks'
+import { STATUS_CONFIG, formatDuration } from '@/app/lib/task'
+import type { GroupDragState } from '@/app/types'
 
 function TaskCard({
     item,
@@ -104,7 +100,7 @@ function Column({
     group: Group | null
     items: Item[]           // apenas itens raiz desta coluna
     allItems: Item[]        // todos os itens (para buscar subtarefas)
-    dragState: DragState | null
+    dragState: GroupDragState | null
     onDragStart: (e: React.DragEvent, itemId: number, groupId: number | null) => void
     onDragEnd: () => void
     onDrop: (targetGroupId: number | null) => void
@@ -280,7 +276,7 @@ function NewGroupButton({ onAdd }: { onAdd: (name: string) => void }) {
 
 export default function GroupsPage({ open, onClose, onRequestClose }: { open: boolean; onClose: () => void; onRequestClose: () => void }) {
     const { items, groups, addGroup, removeGroup, updateGroup, setItemGroup } = useTasks()
-    const [dragState, setDragState] = useState<DragState | null>(null)
+    const [dragState, setGroupDragState] = useState<GroupDragState | null>(null)
     const [animClass, setAnimClass] = useState('groups-enter')
 
     useEffect(() => {
@@ -294,17 +290,17 @@ export default function GroupsPage({ open, onClose, onRequestClose }: { open: bo
     }, [open])
 
     const handleDragStart = useCallback((_e: React.DragEvent, itemId: number, sourceGroupId: number | null) => {
-        setDragState({ itemId, sourceGroupId })
+        setGroupDragState({ itemId, sourceGroupId })
     }, [])
 
-    const handleDragEnd = useCallback(() => setDragState(null), [])
+    const handleDragEnd = useCallback(() => setGroupDragState(null), [])
 
     const handleDrop = useCallback((targetGroupId: number | null) => {
         if (!dragState) return
         if (dragState.sourceGroupId !== targetGroupId) {
             setItemGroup(dragState.itemId, targetGroupId)
         }
-        setDragState(null)
+        setGroupDragState(null)
     }, [dragState, setItemGroup])
 
     // somente raiz (sem parentId)

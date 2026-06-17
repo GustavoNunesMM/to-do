@@ -6,7 +6,11 @@ import {
     setFlutterSoundFile,
     setFlutterMinimizeOnClose,
     setFlutterStartOnBoot,
-} from '../lib/flutter_bridge'
+    setFlutterAmbientEnabled,
+    setFlutterAmbientFile,
+    setFlutterAmbientVolume,
+    setFlutterWidgetMode,
+} from '@/app/lib/flutter_bridge'
 
 const STORAGE_KEY = 'app-settings'
 
@@ -20,6 +24,12 @@ export interface AppSettings {
     soundEnabled: boolean
     soundVolume: number        // 0-100
     soundFile: string          // asset name
+    // Ambient sounds
+    ambientEnabled: boolean
+    ambientFile: string         // MP3 filename
+    ambientVolume: number       // 0-100
+    // Widget mode
+    widgetMode: boolean
     // App behavior
     minimizeOnClose: boolean
     startOnBoot: boolean
@@ -34,17 +44,16 @@ const DEFAULT_SETTINGS: AppSettings = {
     soundEnabled: true,
     soundVolume: 80,
     soundFile: 'notify.wav',
+    ambientEnabled: false,
+    ambientFile: 'rain.mp3',
+    ambientVolume: 40,
+    widgetMode: false,
     minimizeOnClose: true,
     startOnBoot: false,
     showNotifications: true,
 }
 
-interface ContextValue {
-    settings: AppSettings
-    updateSettings: (patch: Partial<AppSettings>) => void
-}
-
-const SettingsContext = createContext<ContextValue | null>(null)
+const SettingsContext = createContext<{ settings: AppSettings; updateSettings: (patch: Partial<AppSettings>) => void } | null>(null)
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
     const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS)
@@ -75,6 +84,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
             if (patch.soundEnabled !== undefined)    setFlutterSoundEnabled(next.soundEnabled)
             if (patch.soundVolume !== undefined)     setFlutterVolume(next.soundVolume)
             if (patch.soundFile !== undefined)       setFlutterSoundFile(next.soundFile)
+            if (patch.ambientEnabled !== undefined)  setFlutterAmbientEnabled(next.ambientEnabled)
+            if (patch.ambientFile !== undefined)     setFlutterAmbientFile(next.ambientFile)
+            if (patch.ambientVolume !== undefined)   setFlutterAmbientVolume(next.ambientVolume)
+            if (patch.widgetMode !== undefined)      setFlutterWidgetMode(next.widgetMode)
             if (patch.minimizeOnClose !== undefined) setFlutterMinimizeOnClose(next.minimizeOnClose)
             if (patch.startOnBoot !== undefined)     setFlutterStartOnBoot(next.startOnBoot)
 
@@ -89,7 +102,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     )
 }
 
-export function useSettings(): ContextValue {
+export function useSettings() {
     const ctx = useContext(SettingsContext)
     if (!ctx) throw new Error('useSettings must be used inside SettingsProvider')
     return ctx

@@ -3,18 +3,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:local_notifier/local_notifier.dart';
+import 'package:window_manager/window_manager.dart';
 import 'settings_service.dart';
 import 'tray.dart';
 
 const _appUrl = 'http://localhost:3000';
 
-// Comando enviado do handler JS (thread errada) para o State (platform thread)
 sealed class _AudioCmd {}
-class _PlayDefault extends _AudioCmd {}
-class _PlayPreview extends _AudioCmd {
-  final String file;
-  final double volume;
+class _PlayDefault  extends _AudioCmd {}
+class _PlayPreview  extends _AudioCmd {
+  final String file; final double volume;
   _PlayPreview(this.file, this.volume);
+}
+class _AmbientPlay  extends _AudioCmd {}
+class _AmbientStop  extends _AudioCmd {}
+class _AmbientVolume extends _AudioCmd {
+  final double volume;
+  _AmbientVolume(this.volume);
 }
 
 class WebViewScreen extends StatefulWidget {
@@ -27,16 +32,20 @@ class WebViewScreen extends StatefulWidget {
 
 class _WebViewScreenState extends State<WebViewScreen> {
   final _audio    = AudioPlayer();
+  final _ambient  = AudioPlayer();
   final _settings = SettingsService();
   final _cmds     = StreamController<_AudioCmd>.broadcast();
   StreamSubscription<_AudioCmd>? _sub;
   bool _loading   = true;
+  InAppWebViewController? _webController;
 
   @override
   void initState() {
     super.initState();
-    // Listener roda na platform thread — aqui é seguro chamar audioplayers
     _sub = _cmds.stream.listen(_handleCmd);
+    if (_settings.ambientEnabled) {
+      _cmds.add(_AmbientPlay());
+    }
   }
 
   Future<void> _handleCmd(_AudioCmd cmd) async {
@@ -54,6 +63,23 @@ class _WebViewScreenState extends State<WebViewScreen> {
           await _audio.setVolume(v.clamp(0.0, 1.0));
           await _audio.play(AssetSource('sounds/$f'));
         } catch (_) {}
+
+      case _AmbientPlay():
+        try {
+          await _ambient.setReleaseMode(ReleaseMode.loop);
+          await _ambient.setVolume(_settings.ambientVolume);
+          await _ambient.play(AssetSource('sounds/ambient/${_settings.ambientFile}'));
+        } catch (_) {}
+
+      case _AmbientStop():
+        try {
+          await _ambient.stop();
+        } catch (_) {}
+
+      case _AmbientVolume(volume: final v):
+        try {
+          await _ambient.setVolume(v.clamp(0.0, 1.0));
+        } catch (_) {}
     }
   }
 
@@ -63,6 +89,8 @@ class _WebViewScreenState extends State<WebViewScreen> {
   }
 
   void _registerHandlers(InAppWebViewController controller) {
+    _webController = controller;
+
     controller.addJavaScriptHandler(
       handlerName: 'pomodoroBreak',
       callback: (_) async {
@@ -93,8 +121,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
       handlerName: 'setVolume',
       callback: (args) async {
         if (args.isEmpty) return;
-        final v = (args[0] as num).toInt();
-        await _settings.setVolume(v);
+        await _settings.setVolume((args[0] as num).toInt());
       },
     );
 
@@ -103,6 +130,65 @@ class _WebViewScreenState extends State<WebViewScreen> {
       callback: (args) async {
         if (args.isEmpty) return;
         await _settings.setSoundFile(args[0].toString());
+      },
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'previewSound',
+      callback: (args) {
+        final file = args.isNotEmpty ? args[0].toString() : _settings.soundFile;
+        final vol  = args.length > 1
+            ? (args[1] as num).toDouble() / 100.0
+            : _settings.soundVolume;
+        _cmds.add(_PlayPreview(file, vol));
+      },
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'setAmbientEnabled',
+      callback: (args) async {
+        final v = args.isNotEmpty && args[0] == true;
+        await _settings.setAmbientEnabled(v);
+        _cmds.add(v ? _AmbientPlay() : _AmbientStop());
+      },
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'setAmbientFile',
+      callback: (args) async {
+        if (args.isEmpty) return;
+        await _settings.setAmbientFile(args[0].toString());
+        if (_settings.ambientEnabled) _cmds.add(_AmbientPlay());
+      },
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'setAmbientVolume',
+      callback: (args) async {
+        if (args.isEmpty) return;
+        final v = (args[0] as num).toInt();
+        await _settings.setAmbientVolume(v);
+        _cmds.add(_AmbientVolume(v / 100.0));
+      },
+    );
+
+    // Modo widget: redimensiona a janela atual
+    controller.addJavaScriptHandler(
+      handlerName: 'setWidgetMode',
+      callback: (args) async {
+        final enable = args.isNotEmpty && args[0] == true;
+        if (enable) {
+          await windowManager.setAlwaysOnTop(true);
+          await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
+          await windowManager.setSize(const Size(320, 520));
+          await windowManager.setAlignment(Alignment.topRight);
+        } else {
+          await windowManager.setAlwaysOnTop(false);
+          await windowManager.setTitleBarStyle(TitleBarStyle.normal);
+          await windowManager.setSize(const Size(1280, 800));
+          await windowManager.center();
+        }
+        await AppTray().rebuildMenu();
       },
     );
 
@@ -122,18 +208,6 @@ class _WebViewScreenState extends State<WebViewScreen> {
         await AppTray().rebuildMenu();
       },
     );
-
-    controller.addJavaScriptHandler(
-      handlerName: 'previewSound',
-      callback: (args) {
-        final file = args.isNotEmpty ? args[0].toString() : _settings.soundFile;
-        final vol  = args.length > 1
-            ? (args[1] as num).toDouble() / 100.0
-            : _settings.soundVolume;
-        // Apenas enfileira — o listener no State executa na platform thread
-        _cmds.add(_PlayPreview(file, vol));
-      },
-    );
   }
 
   @override
@@ -141,6 +215,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
     _sub?.cancel();
     _cmds.close();
     _audio.dispose();
+    _ambient.dispose();
     super.dispose();
   }
 

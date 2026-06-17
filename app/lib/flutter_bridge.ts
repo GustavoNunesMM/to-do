@@ -39,3 +39,27 @@ export function setFlutterStartOnBoot(v: boolean) {
 export function previewSound(file: string, volume: number) {
     getFlutter()?.callHandler('previewSound', file, volume)
 }
+
+export function setFlutterAmbientEnabled(v: boolean) {
+    getFlutter()?.callHandler('setAmbientEnabled', v)
+}
+
+export function setFlutterAmbientFile(name: string) {
+    getFlutter()?.callHandler('setAmbientFile', name)
+}
+
+export function setFlutterAmbientVolume(v: number) {
+    getFlutter()?.callHandler('setAmbientVolume', v)
+}
+
+export function setFlutterWidgetMode(v: boolean) {
+    getFlutter()?.callHandler('setWidgetMode', v)
+}
+
+export function setFlutterWidgetTaskUpdate(time: string, running: boolean) {
+    getFlutter()?.callHandler('widgetTaskUpdate', time, running)
+}
+
+export function setFlutterWidgetStateUpdate(tasks: object[], selectedId: number | null) {
+    getFlutter()?.callHandler('widgetStateUpdate', { tasks, selectedId })
+}

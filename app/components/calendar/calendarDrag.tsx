@@ -1,13 +1,7 @@
 'use client'
 import { createContext, useContext, useRef, useState, useCallback, useEffect, ReactNode } from 'react'
 
-interface CalendarDragContextValue {
-    dragging: Item | null
-    ghostX: number
-    ghostY: number
-    startDrag: (item: Item, e: React.PointerEvent) => void
-    registerDrop: (el: HTMLElement, handler: (item: Item, x: number, y: number) => void) => () => void
-}
+import type { CalendarDragContextValue } from '@/app/types'
 
 const CalendarDragContext = createContext<CalendarDragContextValue | null>(null)
 

@@ -1,6 +1,7 @@
 'use client'
 import { createContext, useContext, useReducer, useEffect, useState, ReactNode } from 'react'
-import { genId } from '../lib/task'
+import { genId } from '@/app/lib/task'
+import type { TasksAction, TasksState, TasksContextValue } from '@/app/types'
 
 const STORAGE_KEY        = 'tasks-state'
 const POMODORO_KEY       = 'pomodoro-config'
@@ -12,24 +13,9 @@ const GROUP_COLORS = [
     '#3b82f6', '#ef4444', '#8b5cf6', '#14b8a6',
 ]
 
-type Action =
-    | { type: 'ADD';             payload: Item }
-    | { type: 'DELETE';          payload: number }
-    | { type: 'UPDATE';          payload: Item }
-    | { type: 'UPDATE_STATUS';   payload: { id: number; status: TaskStatus } }
-    | { type: 'UPDATE_PROGRESS'; payload: { id: number; progress: number; remainingSec: number; taskElapsed: number } }
-    | { type: 'SELECT';          payload: number | null }
-    | { type: 'SET_GROUP';       payload: { itemId: number; groupId: number | null } }
-    | { type: 'HYDRATE';         payload: State }
+const initialState: TasksState = { items: [], selectedId: null }
 
-interface State {
-    items: Item[]
-    selectedId: number | null
-}
-
-const initialState: State = { items: [], selectedId: null }
-
-function reducer(state: State, action: Action): State {
+function reducer(state: TasksState, action: TasksAction): TasksState {
     switch (action.type) {
         case 'ADD':
             return { ...state, items: [...state.items, action.payload] }
@@ -84,31 +70,10 @@ function reducer(state: State, action: Action): State {
     }
 }
 
-interface ContextValue {
-    items: Item[]
-    selected: Item | undefined
-    selectedId: number | null
-    hydrated: boolean
-    pomodoroConfig: PomodoroConfig
-    groups: Group[]
-    add:            (item: Omit<Item, 'id' | 'status'>, id?: number) => void
-    addSubtask:     (parentId: number, item: Omit<Item, 'id' | 'status' | 'parentId'>) => void
-    remove:         (id: number) => void
-    update:         (item: Item) => void
-    updateStatus:   (id: number, status: TaskStatus) => void
-    updateProgress: (id: number, progress: number, remainingSec: number, taskElapsed: number) => void
-    select:         (id: number | null) => void
-    setPomodoroConfig: (cfg: PomodoroConfig) => void
-    addGroup:       (name: string) => Group
-    removeGroup:    (id: number) => void
-    updateGroup:    (group: Group) => void
-    setItemGroup:   (itemId: number, groupId: number | null) => void
-}
-
-const TasksContext = createContext<ContextValue | null>(null)
+const TasksContext = createContext<TasksContextValue | null>(null)
 
 export function TasksProvider({ children }: { children: ReactNode }) {
-    const [state, dispatch]           = useReducer(reducer, initialState)
+    const [state, dispatch]           = useReducer(reducer, initialState as TasksState)
     const [hydrated, setHydrated]     = useState(false)
     const [pomodoroConfig, setPomodoroConfigState] = useState<PomodoroConfig>(DEFAULT_POMODORO)
     const [groups, setGroups]         = useState<Group[]>([])
@@ -165,7 +130,7 @@ export function TasksProvider({ children }: { children: ReactNode }) {
 
     const selected = state.items.find(i => i.id === state.selectedId)
 
-    const value: ContextValue = {
+    const value: TasksContextValue = {
         items: state.items,
         selected,
         selectedId: state.selectedId,
@@ -190,7 +155,7 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     return <TasksContext.Provider value={value}>{children}</TasksContext.Provider>
 }
 
-export function useTasks(): ContextValue {
+export function useTasks(): TasksContextValue {
     const ctx = useContext(TasksContext)
     if (!ctx) throw new Error('useTasks must be used inside TasksProvider')
     return ctx

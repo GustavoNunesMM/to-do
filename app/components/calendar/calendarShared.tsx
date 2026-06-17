@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import { durationToSec, STATUS_CONFIG } from '../../lib/task'
-import { useCalendarDrag } from './calendarDrag'
+import { durationToSec, STATUS_CONFIG } from '@/app/lib/task'
+import { useCalendarDrag } from '@/app/components/calendar/calendarDrag'
 
 export type CalendarView = 'day' | 'week' | 'month'
 

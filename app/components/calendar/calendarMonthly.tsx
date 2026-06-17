@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import { toDateKey, startOfMonth, daysInMonth, DAY_LABELS, TaskChip } from './calendarShared'
-import { useCalendarDrag } from './calendarDrag'
+import { toDateKey, startOfMonth, daysInMonth, DAY_LABELS, TaskChip } from '@/app/components/calendar/calendarShared'
+import { useCalendarDrag } from '@/app/components/calendar/calendarDrag'
 
 const MAX_CHIPS = 3
 

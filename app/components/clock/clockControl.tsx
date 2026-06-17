@@ -1,10 +1,11 @@
 'use client'
 import { useState, useRef, useEffect } from "react";
-import Clock from './clock'
-import ControllButtons from '../controllButtons'
-import { useTasks } from '../../store/tasks'
-import { STATUS_CONFIG, durationToSec, formatTime } from '../../lib/task'
-import { notifyPomodoroBreak, notifyTaskDone } from '../../lib/flutter_bridge'
+import Clock from '@/app/components/clock/clock'
+import ControllButtons from '@/app/components/controllButtons'
+import { useTasks } from '@/app/store/tasks'
+import { STATUS_CONFIG, durationToSec, formatTime } from '@/app/lib/task'
+import { notifyPomodoroBreak, notifyTaskDone } from '@/app/lib/flutter_bridge'
+import type { TimerState, ClockControlProps } from '@/app/types'
 
 type Mode = 'task' | 'pomodoro'
 
@@ -15,7 +16,7 @@ const modeConfig = {
     pomodoro: { dot: 'bg-orange-400',  label: 'Pomodoro',     timeColor: 'text-orange-300/90', arcClass: 'text-orange-400' },
 }
 
-export default function ClockControl() {
+export default function ClockControl({ onPlayRef, onPauseRef, onStopRef, onTimerState }: ClockControlProps) {
     const { selected, updateStatus, updateProgress, pomodoroConfig } = useTasks()
 
     const [tarefa, setTarefa]               = useState<TaskStatus>('idle')
@@ -128,6 +129,13 @@ export default function ClockControl() {
         startTimer(totalSec)
     }
 
+    // Expõe funções via refs
+    useEffect(() => {
+        if (onPlayRef)  onPlayRef.current  = startFunc
+        if (onPauseRef) onPauseRef.current = pauseFunc
+        if (onStopRef)  onStopRef.current  = stopFunc
+    })
+
     function pauseFunc() {
         clearTimer()
         saveProgress()
@@ -213,6 +221,11 @@ export default function ClockControl() {
         : { ...STATUS_CONFIG[tarefa], timeColor: 'text-white/60', arcClass: '' }
     const totalSec   = selected ? durationToSec(selected.duration) : null
     const displaySec = mode === 'pomodoro' ? pomodoroSec : (remainingSec ?? totalSec)
+
+    // Sincroniza estado do timer com o WidgetView
+    useEffect(() => {
+        onTimerState?.({ tarefa, remainingSec, mode, pomodoroSec })
+    }, [tarefa, remainingSec, mode, pomodoroSec])
 
     return (
         <div className="relative h-full w-full flex items-center justify-center">

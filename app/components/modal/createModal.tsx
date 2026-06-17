@@ -3,22 +3,11 @@
 import { Modal, ModalDialog, Input, Textarea, Button } from '@mui/joy';
 import { useState, useEffect, useRef } from 'react';
 import { MdAdd, MdDeleteOutline } from 'react-icons/md';
-import DurationPicker from '../timePicker';
-import { useTasks } from '../../store/tasks';
-import { genId } from '../../lib/task';
+import DurationPicker from '@/app/components/timePicker';
+import { useTasks } from '@/app/store/tasks';
+import { genId } from '@/app/lib/task';
+import type { SubtaskDraft, CreateModalProps } from '@/app/types';
 
-interface SubtaskDraft {
-    id: number
-    name: string
-    duration: durationType
-    pomodoroEnabled: boolean
-}
-
-interface Props {
-    openModal: boolean;
-    onClose: () => void;
-    editItem?: Item;
-}
 
 function PomodoroToggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
     return (
@@ -236,7 +225,7 @@ function ModalFooter({ error, isEditing, onClose, onSave }: FooterProps) {
     )
 }
 
-export default function CreateModal({ openModal, onClose, editItem }: Props) {
+export default function CreateModal({ openModal, onClose, editItem }: CreateModalProps) {
     const { add, update, addSubtask, remove, items } = useTasks();
     const [name, setName]                       = useState('');
     const [duration, setDuration]               = useState<durationType>({ hours: 0, minutes: 30 });

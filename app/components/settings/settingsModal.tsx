@@ -1,15 +1,9 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { useSettings } from '../../store/settings'
-import { useTasks } from '../../store/tasks'
-import { previewSound } from '../../lib/flutter_bridge'
-
-type Tab = 'pomodoro' | 'aparencia' | 'som' | 'aplicativo'
-
-interface Props {
-    open: boolean
-    onClose: () => void
-}
+import { useSettings } from '@/app/store/settings'
+import { useTasks } from '@/app/store/tasks'
+import { previewSound } from '@/app/lib/flutter_bridge'
+import type { SettingsTab, ToggleRowProps, ModalOpenProps } from '@/app/types'
 
 const GLASS: React.CSSProperties = {
     background: 'rgba(255,255,255,0.08)',
@@ -192,6 +186,12 @@ function SpeakerIcon({ muted }: { muted: boolean }) {
     )
 }
 
+const AMBIENT_SOUNDS = [
+    { id: 'rain.mp3',        label: 'Chuva',        emoji: '🌧️' },
+    { id: 'brown-noise.mp3', label: 'Ruído marrom',  emoji: '🌫️' },
+    { id: 'ambient.mp3',      label: 'Ambiente',      emoji: '🌿' },
+]
+
 function TabSom() {
     const { settings, updateSettings } = useSettings()
     const fileInputRef = useRef<HTMLInputElement>(null)
@@ -312,15 +312,72 @@ function TabSom() {
                     </button>
                 </div>
             </div>
+
+            {/* Sons ambiente */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ ...GLASS, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                        <p style={{ color: '#fff', fontSize: 14, fontWeight: 500 }}>Sons ambiente</p>
+                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 2 }}>
+                            Reproduzir som em loop enquanto trabalha
+                        </p>
+                    </div>
+                    <ToggleSwitch value={settings.ambientEnabled} onChange={v => updateSettings({ ambientEnabled: v })} />
+                </div>
+
+                {/* Grid de sons */}
+                <div style={{
+                    display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8,
+                    opacity: settings.ambientEnabled ? 1 : 0.4,
+                    pointerEvents: settings.ambientEnabled ? 'auto' : 'none',
+                }}>
+                    {AMBIENT_SOUNDS.map(s => {
+                        const isSelected = settings.ambientFile === s.id
+                        return (
+                            <button
+                                key={s.id}
+                                type="button"
+                                onClick={() => updateSettings({ ambientFile: s.id })}
+                                style={{
+                                    display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                    gap: 6, padding: '10px 4px',
+                                    borderRadius: 10,
+                                    background: isSelected ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.05)',
+                                    border: isSelected ? '1px solid rgba(99,102,241,0.5)' : '1px solid rgba(255,255,255,0.1)',
+                                    cursor: 'pointer', outline: 'none',
+                                    transition: 'background 0.2s, border-color 0.2s',
+                                }}
+                            >
+                                <span style={{ fontSize: 22 }}>{s.emoji}</span>
+                                <span style={{ color: isSelected ? '#fff' : 'rgba(255,255,255,0.6)', fontSize: 10, textAlign: 'center', lineHeight: 1.2 }}>
+                                    {s.label}
+                                </span>
+                            </button>
+                        )
+                    })}
+                </div>
+
+                {/* Volume ambiente */}
+                <div style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    opacity: settings.ambientEnabled ? 1 : 0.4,
+                    pointerEvents: settings.ambientEnabled ? 'auto' : 'none',
+                }}>
+                    <span style={{ color: 'rgba(255,255,255,0.5)' }}>
+                        <SpeakerIcon muted={!settings.ambientEnabled || settings.ambientVolume === 0} />
+                    </span>
+                    <input
+                        type="range" min={0} max={100} value={settings.ambientVolume}
+                        onChange={e => updateSettings({ ambientVolume: Number(e.target.value) })}
+                        style={{ flex: 1, height: 4, accentColor: '#6366f1', cursor: 'pointer' }}
+                    />
+                    <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, minWidth: 32, textAlign: 'right' }}>
+                        {settings.ambientVolume}%
+                    </span>
+                </div>
+            </div>
         </div>
     )
-}
-
-interface ToggleRowProps {
-    label: string
-    description: string
-    value: boolean
-    onChange: (v: boolean) => void
 }
 
 function ToggleRow({ label, description, value, onChange }: ToggleRowProps) {
@@ -345,6 +402,12 @@ function TabAplicativo() {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4  }}>
+                <ToggleRow
+                    label="Modo widget"
+                    description="Janela compacta sempre visível com tarefa e tempo"
+                    value={settings.widgetMode}
+                    onChange={v => updateSettings({ widgetMode: v })}
+                />
                 <ToggleRow
                     label="Minimizar ao fechar"
                     description="A janela é minimizada em vez de fechar"
@@ -383,15 +446,15 @@ function TabAplicativo() {
     )
 }
 
-const TABS: { id: Tab; label: string }[] = [
+const TABS: { id: SettingsTab; label: string }[] = [
     { id: 'pomodoro',   label: 'Pomodoro' },
     { id: 'aparencia',  label: 'Aparência' },
     { id: 'som',        label: 'Som' },
     { id: 'aplicativo', label: 'Aplicativo' },
 ]
 
-export default function SettingsModal({ open, onClose }: Props) {
-    const [activeTab, setActiveTab] = useState<Tab>('pomodoro')
+export default function SettingsModal({ open, onClose }: ModalOpenProps) {
+    const [activeTab, setActiveTab] = useState<SettingsTab>('pomodoro')
     const [visible, setVisible]     = useState(false)
     const [animClass, setAnimClass] = useState('settings-enter')
 

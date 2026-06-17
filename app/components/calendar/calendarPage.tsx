@@ -1,23 +1,18 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { useTasks } from '../../store/tasks'
-import { STATUS_CONFIG } from '../../lib/task'
+import { useTasks } from '@/app/store/tasks'
+import { STATUS_CONFIG } from '@/app/lib/task'
 import {
     CalendarView, startOfWeek, addDays, MONTH_NAMES,
     Dropdown, UnscheduledBank, navBtnStyle,
-} from './calendarShared'
-import CalendarDaily   from './calendarDaily'
-import CalendarWeekly  from './calendarWeekly'
-import CalendarMonthly from './calendarMonthly'
-import { CalendarDragProvider } from './calendarDrag'
+} from '@/app/components/calendar/calendarShared'
+import CalendarDaily   from '@/app/components/calendar/calendarDaily'
+import CalendarWeekly  from '@/app/components/calendar/calendarWeekly'
+import CalendarMonthly from '@/app/components/calendar/calendarMonthly'
+import { CalendarDragProvider } from '@/app/components/calendar/calendarDrag'
+import type { ModalPageProps } from '@/app/types'
 
-interface Props {
-    open: boolean
-    onRequestClose: () => void
-    onClose: () => void
-}
-
-export default function CalendarPage({ open, onRequestClose, onClose }: Props) {
+export default function CalendarPage({ open, onRequestClose, onClose }: ModalPageProps) {
     const { items, groups, update } = useTasks()
     const [view, setView]               = useState<CalendarView>('week')
     const [currentDate, setCurrentDate] = useState(() => new Date())

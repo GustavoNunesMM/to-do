@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
-import { toDateKey, TaskChip } from './calendarShared'
-import { useCalendarDrag } from './calendarDrag'
+import { toDateKey, TaskChip } from '@/app/components/calendar/calendarShared'
+import { useCalendarDrag } from '@/app/components/calendar/calendarDrag'
 
 const HOURS   = Array.from({ length: 24 }, (_, i) => i)
 const ROW_H   = 56
