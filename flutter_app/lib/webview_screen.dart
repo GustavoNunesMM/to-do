@@ -1,10 +1,21 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:just_audio/just_audio.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:local_notifier/local_notifier.dart';
 import 'settings_service.dart';
+import 'tray.dart';
 
 const _appUrl = 'http://localhost:3000';
+
+// Comando enviado do handler JS (thread errada) para o State (platform thread)
+sealed class _AudioCmd {}
+class _PlayDefault extends _AudioCmd {}
+class _PlayPreview extends _AudioCmd {
+  final String file;
+  final double volume;
+  _PlayPreview(this.file, this.volume);
+}
 
 class WebViewScreen extends StatefulWidget {
   const WebViewScreen({super.key, this.webViewEnvironment});
@@ -15,26 +26,35 @@ class WebViewScreen extends StatefulWidget {
 }
 
 class _WebViewScreenState extends State<WebViewScreen> {
-  final _audio = AudioPlayer();
+  final _audio    = AudioPlayer();
   final _settings = SettingsService();
-  bool _loading = true;
+  final _cmds     = StreamController<_AudioCmd>.broadcast();
+  StreamSubscription<_AudioCmd>? _sub;
+  bool _loading   = true;
 
   @override
   void initState() {
     super.initState();
-    _initAudio();
+    // Listener roda na platform thread — aqui é seguro chamar audioplayers
+    _sub = _cmds.stream.listen(_handleCmd);
   }
 
-  Future<void> _initAudio() async {
-    await _audio.setAsset('assets/sounds/notify.wav').catchError((_) => const Duration());
-  }
+  Future<void> _handleCmd(_AudioCmd cmd) async {
+    switch (cmd) {
+      case _PlayDefault():
+        if (!_settings.soundEnabled) return;
+        try {
+          await _audio.setVolume(_settings.soundVolume);
+          await _audio.play(AssetSource('sounds/${_settings.soundFile}'));
+        } catch (_) {}
 
-  Future<void> _playSound() async {
-    if (!_settings.soundEnabled) return;
-    try {
-      await _audio.seek(Duration.zero);
-      await _audio.play();
-    } catch (_) {}
+      case _PlayPreview(file: final f, volume: final v):
+        if (!_settings.soundEnabled) return;
+        try {
+          await _audio.setVolume(v.clamp(0.0, 1.0));
+          await _audio.play(AssetSource('sounds/$f'));
+        } catch (_) {}
+    }
   }
 
   Future<void> _showNotification(String title, String body) async {
@@ -46,7 +66,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
     controller.addJavaScriptHandler(
       handlerName: 'pomodoroBreak',
       callback: (_) async {
-        await _playSound();
+        _cmds.add(_PlayDefault());
         await _showNotification('🍅 Hora da pausa!', 'Pomodoro concluído. Descanse um pouco.');
       },
     );
@@ -55,14 +75,71 @@ class _WebViewScreenState extends State<WebViewScreen> {
       handlerName: 'taskDone',
       callback: (args) async {
         final name = args.isNotEmpty ? args[0].toString() : 'Tarefa';
-        await _playSound();
+        _cmds.add(_PlayDefault());
         await _showNotification('✅ Concluído!', '"$name" foi finalizada.');
+      },
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'setSoundEnabled',
+      callback: (args) async {
+        final v = args.isNotEmpty && args[0] == true;
+        await _settings.setSoundEnabled(v);
+        await AppTray().rebuildMenu();
+      },
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'setVolume',
+      callback: (args) async {
+        if (args.isEmpty) return;
+        final v = (args[0] as num).toInt();
+        await _settings.setVolume(v);
+      },
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'setSoundFile',
+      callback: (args) async {
+        if (args.isEmpty) return;
+        await _settings.setSoundFile(args[0].toString());
+      },
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'setMinimizeOnClose',
+      callback: (args) async {
+        final v = args.isNotEmpty && args[0] == true;
+        await _settings.setMinimizeOnClose(v);
+      },
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'setStartOnBoot',
+      callback: (args) async {
+        final v = args.isNotEmpty && args[0] == true;
+        await _settings.setStartupEnabled(v);
+        await AppTray().rebuildMenu();
+      },
+    );
+
+    controller.addJavaScriptHandler(
+      handlerName: 'previewSound',
+      callback: (args) {
+        final file = args.isNotEmpty ? args[0].toString() : _settings.soundFile;
+        final vol  = args.length > 1
+            ? (args[1] as num).toDouble() / 100.0
+            : _settings.soundVolume;
+        // Apenas enfileira — o listener no State executa na platform thread
+        _cmds.add(_PlayPreview(file, vol));
       },
     );
   }
 
   @override
   void dispose() {
+    _sub?.cancel();
+    _cmds.close();
     _audio.dispose();
     super.dispose();
   }
@@ -83,7 +160,6 @@ class _WebViewScreenState extends State<WebViewScreen> {
             ),
             onWebViewCreated: (controller) => _registerHandlers(controller),
             onLoadStop: (controller, _) async {
-              // Desregistra SWs em cache que causam reloads dentro do WebView
               await controller.evaluateJavascript(source: '''
                 if ('serviceWorker' in navigator) {
                   navigator.serviceWorker.getRegistrations()

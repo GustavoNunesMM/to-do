@@ -49,7 +49,11 @@
       "Bash(node tmp_test5.mjs)",
       "Bash(node tmp_test6.mjs)",
       "Bash(node tmp_test7.mjs)",
-      "Bash(node tmp_dnd.mjs)"
+      "Bash(node tmp_dnd.mjs)",
+      "Bash(git -C \"C:\\\\Users\\\\Usuario\\\\Documents\\\\estudos\\\\to-do\\\\.claude\\\\worktrees\\\\agent-a7fc323a1380e4ae2\" status --short)",
+      "Bash(git -C \"C:\\\\Users\\\\Usuario\\\\Documents\\\\estudos\\\\to-do\\\\.claude\\\\worktrees\\\\agent-a7fc323a1380e4ae2\" log --oneline -3)",
+      "Bash(git *)",
+      "PowerShell(Stop-Process *)"
     ]
   }
 }

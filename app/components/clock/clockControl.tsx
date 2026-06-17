@@ -3,7 +3,6 @@ import { useState, useRef, useEffect } from "react";
 import Clock from './clock'
 import ControllButtons from '../controllButtons'
 import { useTasks } from '../../store/tasks'
-import { GiTomato } from "react-icons/gi";
 import { STATUS_CONFIG, durationToSec, formatTime } from '../../lib/task'
 import { notifyPomodoroBreak, notifyTaskDone } from '../../lib/flutter_bridge'
 
@@ -14,53 +13,6 @@ const NEAR_POMODORO_SEC = 10
 const modeConfig = {
     task:     { dot: 'bg-emerald-400', label: 'Em andamento', timeColor: 'text-white/60',      arcClass: '' },
     pomodoro: { dot: 'bg-orange-400',  label: 'Pomodoro',     timeColor: 'text-orange-300/90', arcClass: 'text-orange-400' },
-}
-
-function PomodoroPanel() {
-    const { pomodoroConfig, setPomodoroConfig } = useTasks()
-    const [intervalMin, setIntervalMin] = useState(pomodoroConfig.intervalMin)
-    const [breakMin, setBreakMin]       = useState(pomodoroConfig.breakMin)
-
-    function save() { setPomodoroConfig({ intervalMin, breakMin }) }
-
-    return (
-        <div className="glass p-4 w-52 flex flex-col gap-3 mb-2">
-            <p className="text-white/70 text-xs tracking-widest uppercase">Pomodoro</p>
-            <label className="flex flex-col gap-1">
-                <span className="text-white/50 text-xs">Intervalo (min)</span>
-                <input
-                    type="number" min={1} max={120} value={intervalMin}
-                    onChange={e => setIntervalMin(Number(e.target.value))}
-                    className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-white text-sm w-full focus:outline-none focus:border-white/40"
-                />
-            </label>
-            <label className="flex flex-col gap-1">
-                <span className="text-white/50 text-xs">Pausa (min)</span>
-                <input
-                    type="number" min={1} max={60} value={breakMin}
-                    onChange={e => setBreakMin(Number(e.target.value))}
-                    className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-white text-sm w-full focus:outline-none focus:border-white/40"
-                />
-            </label>
-            <button onClick={save} className="btn-glass text-sm">Salvar</button>
-        </div>
-    )
-}
-
-function TomatoIcon() {
-    const [open, setOpen] = useState(false)
-    return (
-        <div
-            className="absolute bottom-4 right-4 z-40 flex flex-col items-end"
-            onMouseEnter={() => setOpen(true)}
-            onMouseLeave={() => setOpen(false)}
-        >
-            {open && <PomodoroPanel />}
-            <button className="text-2xl select-none opacity-50 hover:opacity-100 transition-opacity duration-200">
-                <GiTomato size={24}/>
-            </button>
-        </div>
-    )
 }
 
 export default function ClockControl() {
@@ -308,7 +260,6 @@ export default function ClockControl() {
                     )}
                 </div>
             </div>
-            <TomatoIcon />
         </div>
     )
 }

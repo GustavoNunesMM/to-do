@@ -17,6 +17,8 @@ class AppTray with TrayListener {
     await _buildMenu();
   }
 
+  Future<void> rebuildMenu() => _buildMenu();
+
   Future<void> _buildMenu() async {
     final soundOn = _settings.soundEnabled;
     final startupOn = _settings.startupEnabled;

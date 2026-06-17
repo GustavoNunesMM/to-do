@@ -38,7 +38,7 @@ dependencies:
   window_manager: ^0.5.1
   tray_manager: ^0.5.2
   local_notifier: ^0.1.6
-  just_audio: ^0.10.5
+  audioplayers: ^6.1.0
   shared_preferences: ^2.3.3
 
 dev_dependencies:
@@ -64,7 +64,7 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/sounds/notify.wav
+    - assets/sounds/
     - assets/icon.ico
 
   # An image asset can refer to one or more resolution-specific "variants", see

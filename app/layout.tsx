@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { TasksProvider } from "./store/tasks";
+import { SettingsProvider } from "./store/settings";
+import WallpaperProvider from "./components/WallpaperProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,12 +41,18 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased bg-[url('/assets/bg.jpg')] bg-no-repeat bg-cover`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased bg-no-repeat bg-cover`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: unregisterSW }} />
       </head>
-      <body className="min-h-full flex flex-col"><TasksProvider>{children}</TasksProvider></body>
+      <body className="min-h-full flex flex-col">
+        <SettingsProvider>
+          <WallpaperProvider>
+            <TasksProvider>{children}</TasksProvider>
+          </WallpaperProvider>
+        </SettingsProvider>
+      </body>
     </html>
   );
 }

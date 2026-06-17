@@ -134,7 +134,7 @@ export default function CalendarWeekly({ weekStart, items, allItems, groups, onD
             </div>
 
             {/* linhas dos dias */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, minWidth: 56 + HOURS.length * COL_W }}>
                 {days.map((day, di) => {
                     const dateKey  = toDateKey(day)
                     const isToday  = dateKey === todayKey

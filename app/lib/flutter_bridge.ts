@@ -15,3 +15,27 @@ export function notifyPomodoroBreak() {
 export function notifyTaskDone(taskName: string) {
     getFlutter()?.callHandler('taskDone', taskName)
 }
+
+export function setFlutterSoundEnabled(v: boolean) {
+    getFlutter()?.callHandler('setSoundEnabled', v)
+}
+
+export function setFlutterVolume(v: number) {
+    getFlutter()?.callHandler('setVolume', v)
+}
+
+export function setFlutterSoundFile(name: string) {
+    getFlutter()?.callHandler('setSoundFile', name)
+}
+
+export function setFlutterMinimizeOnClose(v: boolean) {
+    getFlutter()?.callHandler('setMinimizeOnClose', v)
+}
+
+export function setFlutterStartOnBoot(v: boolean) {
+    getFlutter()?.callHandler('setStartOnBoot', v)
+}
+
+export function previewSound(file: string, volume: number) {
+    getFlutter()?.callHandler('previewSound', file, volume)
+}

@@ -74,7 +74,12 @@ class _AppState extends State<App> with WindowListener {
 
   @override
   void onWindowClose() async {
-    await windowManager.hide();
+    if (SettingsService().minimizeOnClose) {
+      await windowManager.hide();
+    } else {
+      AppTray().dispose();
+      await windowManager.destroy();
+    }
   }
 
   @override
