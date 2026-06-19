@@ -1,11 +1,12 @@
 'use client'
 import { createContext, useContext, useReducer, useEffect, useState, ReactNode } from 'react'
 import { genId } from '@/app/lib/task'
-import type { TasksAction, TasksState, TasksContextValue } from '@/app/types'
+import type { TasksAction, TasksState, TasksContextValue, CompletedEntry } from '@/app/types'
 
-const STORAGE_KEY        = 'tasks-state'
-const POMODORO_KEY       = 'pomodoro-config'
-const GROUPS_KEY         = 'groups-state'
+const STORAGE_KEY   = 'tasks-state'
+const POMODORO_KEY  = 'pomodoro-config'
+const GROUPS_KEY    = 'groups-state'
+const HISTORY_KEY   = 'completed-history'
 const DEFAULT_POMODORO: PomodoroConfig = { intervalMin: 25, breakMin: 5 }
 
 const GROUP_COLORS = [
@@ -14,6 +15,14 @@ const GROUP_COLORS = [
 ]
 
 const initialState: TasksState = { items: [], selectedId: null }
+
+function reorderRoots(items: Item[], fromIndex: number, toIndex: number): Item[] {
+    const roots = items.filter(i => !i.parentId)
+    const subs  = items.filter(i =>  i.parentId)
+    const moved = roots.splice(fromIndex, 1)[0]
+    roots.splice(toIndex, 0, moved)
+    return [...roots, ...subs]
+}
 
 function reducer(state: TasksState, action: TasksAction): TasksState {
     switch (action.type) {
@@ -59,6 +68,9 @@ function reducer(state: TasksState, action: TasksAction): TasksState {
                 ),
             }
 
+        case 'REORDER':
+            return { ...state, items: reorderRoots([...state.items], action.payload.fromIndex, action.payload.toIndex) }
+
         case 'SELECT':
             return { ...state, selectedId: action.payload }
 
@@ -77,6 +89,7 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     const [hydrated, setHydrated]     = useState(false)
     const [pomodoroConfig, setPomodoroConfigState] = useState<PomodoroConfig>(DEFAULT_POMODORO)
     const [groups, setGroups]         = useState<Group[]>([])
+    const [completedHistory, setCompletedHistory] = useState<CompletedEntry[]>([])
 
     useEffect(() => {
         try {
@@ -86,6 +99,8 @@ export function TasksProvider({ children }: { children: ReactNode }) {
             if (storedPom) setPomodoroConfigState(JSON.parse(storedPom))
             const storedGroups = localStorage.getItem(GROUPS_KEY)
             if (storedGroups) setGroups(JSON.parse(storedGroups))
+            const storedHistory = localStorage.getItem(HISTORY_KEY)
+            if (storedHistory) setCompletedHistory(JSON.parse(storedHistory))
         } catch {}
         setHydrated(true)
     }, [])
@@ -98,6 +113,10 @@ export function TasksProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         try { localStorage.setItem(GROUPS_KEY, JSON.stringify(groups)) } catch {}
     }, [groups])
+
+    useEffect(() => {
+        try { localStorage.setItem(HISTORY_KEY, JSON.stringify(completedHistory)) } catch {}
+    }, [completedHistory])
 
     function setPomodoroConfig(cfg: PomodoroConfig) {
         setPomodoroConfigState(cfg)
@@ -114,7 +133,6 @@ export function TasksProvider({ children }: { children: ReactNode }) {
 
     function removeGroup(id: number) {
         setGroups(prev => prev.filter(g => g.id !== id))
-        // desassociar tarefas do grupo removido
         state.items.forEach(item => {
             if (item.groupId === id) dispatch({ type: 'SET_GROUP', payload: { itemId: item.id, groupId: null } })
         })
@@ -128,6 +146,31 @@ export function TasksProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'SET_GROUP', payload: { itemId, groupId } })
     }
 
+    function reorder(fromIndex: number, toIndex: number) {
+        dispatch({ type: 'REORDER', payload: { fromIndex, toIndex } })
+    }
+
+    function clearHistory() {
+        setCompletedHistory([])
+    }
+
+    // Registra no histórico quando uma tarefa raiz é concluída
+    useEffect(() => {
+        if (!hydrated) return
+        const now = new Date().toISOString()
+        state.items.forEach(item => {
+            if (item.status === 'done' && !item.parentId) {
+                setCompletedHistory(prev => {
+                    if (prev.some(e => e.id === item.id)) return prev
+                    return [
+                        { id: item.id, name: item.name, duration: item.duration, completedAt: now, taskElapsed: item.taskElapsed ?? 0, groupId: item.groupId },
+                        ...prev,
+                    ]
+                })
+            }
+        })
+    }, [state.items, hydrated])
+
     const selected = state.items.find(i => i.id === state.selectedId)
 
     const value: TasksContextValue = {
@@ -137,6 +180,7 @@ export function TasksProvider({ children }: { children: ReactNode }) {
         hydrated,
         pomodoroConfig,
         groups,
+        completedHistory,
         add: (item, id) => dispatch({ type: 'ADD', payload: { ...item, id: id ?? genId(), status: 'idle' } }),
         addSubtask: (parentId, item) => dispatch({ type: 'ADD', payload: { ...item, id: genId(), status: 'idle', parentId } }),
         remove:         (id)                              => dispatch({ type: 'DELETE',          payload: id }),
@@ -145,11 +189,13 @@ export function TasksProvider({ children }: { children: ReactNode }) {
         updateProgress: (id, progress, remainingSec, taskElapsed) =>
             dispatch({ type: 'UPDATE_PROGRESS', payload: { id, progress, remainingSec, taskElapsed } }),
         select:         (id)                              => dispatch({ type: 'SELECT',          payload: id }),
+        reorder,
         setPomodoroConfig,
         addGroup,
         removeGroup,
         updateGroup,
         setItemGroup,
+        clearHistory,
     }
 
     return <TasksContext.Provider value={value}>{children}</TasksContext.Provider>

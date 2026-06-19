@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:local_notifier/local_notifier.dart';
@@ -7,8 +8,42 @@ import 'settings_service.dart';
 import 'tray.dart';
 import 'webview_screen.dart';
 
+Process? _nodeProcess;
+
+Future<void> _startNodeServer(String appDir) async {
+  final exeDir   = File(Platform.resolvedExecutable).parent.path;
+  final node     = '$exeDir\\node.exe';
+  final serverJs = '$appDir\\server.js';
+
+  if (!File(node).existsSync() || !File(serverJs).existsSync()) return;
+
+  _nodeProcess = await Process.start(
+    node,
+    [serverJs],
+    workingDirectory: appDir,
+    environment: {'NODE_ENV': 'production'},
+  );
+
+  // Aguarda o servidor escrever "ready" no stdout (timeout 30s)
+  final ready = Completer<void>();
+  _nodeProcess!.stdout
+      .transform(const SystemEncoding().decoder)
+      .listen((line) {
+    if (!ready.isCompleted && line.contains('ready')) ready.complete();
+  });
+
+  await ready.future.timeout(
+    const Duration(seconds: 30),
+    onTimeout: () {},
+  );
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  final exeDir  = File(Platform.resolvedExecutable).parent.path;
+  final webApp  = '$exeDir\\webapp';
+  await _startNodeServer(webApp);
 
   WebViewEnvironment? webViewEnvironment;
   if (Platform.isWindows) {
@@ -75,6 +110,7 @@ class _AppState extends State<App> with WindowListener {
       await windowManager.hide();
     } else {
       AppTray().dispose();
+      _nodeProcess?.kill();
       await windowManager.destroy();
     }
   }

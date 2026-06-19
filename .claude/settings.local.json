@@ -54,7 +54,16 @@
       "Bash(git -C \"C:\\\\Users\\\\Usuario\\\\Documents\\\\estudos\\\\to-do\\\\.claude\\\\worktrees\\\\agent-a7fc323a1380e4ae2\" log --oneline -3)",
       "Bash(git *)",
       "PowerShell(Stop-Process *)",
-      "PowerShell(Remove-Item *)"
+      "PowerShell(Remove-Item *)",
+      "Bash(del \"C:\\\\Users\\\\Usuario\\\\Documents\\\\estudos\\\\to-do\\\\app\\\\components\\\\widgetView.tsx\")",
+      "Bash(del \"C:\\\\Users\\\\Usuario\\\\Documents\\\\estudos\\\\to-do\\\\app\\\\components\\\\widgetBridge.tsx\")",
+      "Bash(powershell -Command \"\\(Get-Item assets/icon.ico\\).Length; \\(Get-Item windows/runner/resources/app_icon.ico\\).Length\")",
+      "Bash(copy *)",
+      "PowerShell(wt *)",
+      "PowerShell(Get-Command *)",
+      "PowerShell(Start-Process wt -ArgumentList 'new-tab --title \"Next.js Dev\" -d \"C:\\\\Users\\\\Usuario\\\\Documents\\\\estudos\\\\to-do\" cmd /k pnpm run dev `; new-tab --title \"Flutter Run\" -d \"C:\\\\Users\\\\Usuario\\\\Documents\\\\estudos\\\\to-do\\\\flutter_app\" cmd /k flutter run --no-pub')",
+      "PowerShell(Start-Process wt -ArgumentList 'new-tab --title \"Next.js Dev\" -d \"C:\\\\Users\\\\Usuario\\\\Documents\\\\estudos\\\\to-do\" cmd /k \"pnpm run dev\"')",
+      "PowerShell($args = @\\('new-tab', '--title', 'Next.js Dev', '-d', 'C:\\\\Users\\\\Usuario\\\\Documents\\\\estudos\\\\to-do', 'cmd', '/k', 'pnpm run dev', ';', 'new-tab', '--title', 'Flutter Run', '-d', 'C:\\\\Users\\\\Usuario\\\\Documents\\\\estudos\\\\to-do\\\\flutter_app', 'cmd', '/k', 'flutter run --no-pub'\\); Start-Process wt -ArgumentList $args)"
     ]
   }
 }

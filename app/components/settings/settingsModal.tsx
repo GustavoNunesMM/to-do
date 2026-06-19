@@ -315,22 +315,10 @@ function TabSom() {
 
             {/* Sons ambiente */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div style={{ ...GLASS, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div>
-                        <p style={{ color: '#fff', fontSize: 14, fontWeight: 500 }}>Sons ambiente</p>
-                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, marginTop: 2 }}>
-                            Reproduzir som em loop enquanto trabalha
-                        </p>
-                    </div>
-                    <ToggleSwitch value={settings.ambientEnabled} onChange={v => updateSettings({ ambientEnabled: v })} />
-                </div>
+                <p style={SECTION_LABEL}>Sons ambiente</p>
 
                 {/* Grid de sons */}
-                <div style={{
-                    display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8,
-                    opacity: settings.ambientEnabled ? 1 : 0.4,
-                    pointerEvents: settings.ambientEnabled ? 'auto' : 'none',
-                }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
                     {AMBIENT_SOUNDS.map(s => {
                         const isSelected = settings.ambientFile === s.id
                         return (
@@ -358,13 +346,9 @@ function TabSom() {
                 </div>
 
                 {/* Volume ambiente */}
-                <div style={{
-                    display: 'flex', alignItems: 'center', gap: 12,
-                    opacity: settings.ambientEnabled ? 1 : 0.4,
-                    pointerEvents: settings.ambientEnabled ? 'auto' : 'none',
-                }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <span style={{ color: 'rgba(255,255,255,0.5)' }}>
-                        <SpeakerIcon muted={!settings.ambientEnabled || settings.ambientVolume === 0} />
+                        <SpeakerIcon muted={settings.ambientVolume === 0} />
                     </span>
                     <input
                         type="range" min={0} max={100} value={settings.ambientVolume}
@@ -403,12 +387,6 @@ function TabAplicativo() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4  }}>
                 <ToggleRow
-                    label="Modo widget"
-                    description="Janela compacta sempre visível com tarefa e tempo"
-                    value={settings.widgetMode}
-                    onChange={v => updateSettings({ widgetMode: v })}
-                />
-                <ToggleRow
                     label="Minimizar ao fechar"
                     description="A janela é minimizada em vez de fechar"
                     value={settings.minimizeOnClose}
@@ -438,7 +416,7 @@ function TabAplicativo() {
                     <div style={{ height: 1, background: 'rgba(255,255,255,0.07)' }} />
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>Versão</span>
-                        <span style={{ color: '#fff', fontSize: 13 }}>0.8</span>
+                        <span style={{ color: '#fff', fontSize: 13 }}>0.9.2</span>
                     </div>
                 </div>
             </div>

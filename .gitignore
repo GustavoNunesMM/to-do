@@ -47,3 +47,5 @@ next-env.d.ts
 /public/workbox-*.js.map
 /public/swe-worker-*.js
 /public/swe-worker-*.js.map
+/flutter_app/assets/web/*
+/.claude/*

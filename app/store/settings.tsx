@@ -9,7 +9,6 @@ import {
     setFlutterAmbientEnabled,
     setFlutterAmbientFile,
     setFlutterAmbientVolume,
-    setFlutterWidgetMode,
 } from '@/app/lib/flutter_bridge'
 
 const STORAGE_KEY = 'app-settings'
@@ -28,8 +27,6 @@ export interface AppSettings {
     ambientEnabled: boolean
     ambientFile: string         // MP3 filename
     ambientVolume: number       // 0-100
-    // Widget mode
-    widgetMode: boolean
     // App behavior
     minimizeOnClose: boolean
     startOnBoot: boolean
@@ -47,7 +44,6 @@ const DEFAULT_SETTINGS: AppSettings = {
     ambientEnabled: false,
     ambientFile: 'rain.mp3',
     ambientVolume: 40,
-    widgetMode: false,
     minimizeOnClose: true,
     startOnBoot: false,
     showNotifications: true,
@@ -87,7 +83,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
             if (patch.ambientEnabled !== undefined)  setFlutterAmbientEnabled(next.ambientEnabled)
             if (patch.ambientFile !== undefined)     setFlutterAmbientFile(next.ambientFile)
             if (patch.ambientVolume !== undefined)   setFlutterAmbientVolume(next.ambientVolume)
-            if (patch.widgetMode !== undefined)      setFlutterWidgetMode(next.widgetMode)
             if (patch.minimizeOnClose !== undefined) setFlutterMinimizeOnClose(next.minimizeOnClose)
             if (patch.startOnBoot !== undefined)     setFlutterStartOnBoot(next.startOnBoot)
 

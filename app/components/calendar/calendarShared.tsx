@@ -33,7 +33,6 @@ export function daysInMonth(d: Date): number {
 export const DAY_LABELS  = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 export const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
 
-// ─── helpers de duração ───────────────────────────────────────────────────────
 
 function durLabel(item: Item): string {
     const sec = durationToSec(item.duration)
@@ -42,7 +41,6 @@ function durLabel(item: Item): string {
     return h > 0 ? `${h}h${m > 0 ? `${m}m` : ''}` : `${m}m`
 }
 
-// ─── Dropdown customizado ─────────────────────────────────────────────────────
 
 export interface DropdownOption { value: string; label: string }
 
@@ -114,12 +112,6 @@ export function Dropdown({ value, options, onChange, placeholder }: {
         </div>
     )
 }
-
-// ─── TaskChip — 3 níveis de detalhe ──────────────────────────────────────────
-// compact  → só ponto de cor (mensal)
-// normal   → ponto + nome truncado (semanal)
-// detailed → ponto + nome + duração + status (diário)
-
 export type ChipDetail = 'compact' | 'normal' | 'detailed'
 
 export interface TaskChipProps {
@@ -155,7 +147,6 @@ export function TaskChip({ item, groups, detail = 'normal', draggable, onClick }
         transition: 'opacity 0.1s',
     }
 
-    // compact: só o ponto de cor — usado no mensal para não poluir
     if (detail === 'compact') {
         return (
             <div
@@ -177,7 +168,6 @@ export function TaskChip({ item, groups, detail = 'normal', draggable, onClick }
         )
     }
 
-    // normal: ponto + nome + duração — semanal
     if (detail === 'normal') {
         return (
             <div
@@ -202,7 +192,6 @@ export function TaskChip({ item, groups, detail = 'normal', draggable, onClick }
         )
     }
 
-    // detailed: ponto + nome + duração + status pill — diário
     return (
         <div
             onPointerDown={onPointerDown}
@@ -216,14 +205,12 @@ export function TaskChip({ item, groups, detail = 'normal', draggable, onClick }
                 minWidth: 120,
             }}
         >
-            {/* linha 1: ponto + nome */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, width: '100%', pointerEvents: 'none' }}>
                 <span className={`w-2 h-2 rounded-full flex-shrink-0 ${dotClass}`} />
                 <span style={{ color: '#fff', fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
                     {item.name}
                 </span>
             </div>
-            {/* linha 2: duração + status */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, pointerEvents: 'none' }}>
                 <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10 }}>⏱ {label}</span>
                 <span style={{
@@ -239,7 +226,6 @@ export function TaskChip({ item, groups, detail = 'normal', draggable, onClick }
     )
 }
 
-// ─── UnscheduledBank ──────────────────────────────────────────────────────────
 
 export function UnscheduledBank({ items, groups, onUnschedule }: { items: Item[]; groups: Group[]; onUnschedule: (item: Item) => void }) {
     const { dragging, registerDrop } = useCalendarDrag()

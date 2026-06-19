@@ -40,3 +40,5 @@ export function formatTime(seconds: number): string {
 export function genId(): number {
     return Date.now() * 1000 + Math.floor(Math.random() * 1000)
 }
+
+export const APP_VERSION = '0.9.2'

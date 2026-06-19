@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:local_notifier/local_notifier.dart';
-import 'package:window_manager/window_manager.dart';
 import 'settings_service.dart';
 import 'tray.dart';
 
@@ -169,26 +168,6 @@ class _WebViewScreenState extends State<WebViewScreen> {
         final v = (args[0] as num).toInt();
         await _settings.setAmbientVolume(v);
         _cmds.add(_AmbientVolume(v / 100.0));
-      },
-    );
-
-    // Modo widget: redimensiona a janela atual
-    controller.addJavaScriptHandler(
-      handlerName: 'setWidgetMode',
-      callback: (args) async {
-        final enable = args.isNotEmpty && args[0] == true;
-        if (enable) {
-          await windowManager.setAlwaysOnTop(true);
-          await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
-          await windowManager.setSize(const Size(320, 520));
-          await windowManager.setAlignment(Alignment.topRight);
-        } else {
-          await windowManager.setAlwaysOnTop(false);
-          await windowManager.setTitleBarStyle(TitleBarStyle.normal);
-          await windowManager.setSize(const Size(1280, 800));
-          await windowManager.center();
-        }
-        await AppTray().rebuildMenu();
       },
     );
 

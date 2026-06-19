@@ -4,6 +4,7 @@ import "./globals.css";
 import { TasksProvider } from "./store/tasks";
 import { SettingsProvider } from "./store/settings";
 import WallpaperProvider from "./components/WallpaperProvider";
+import { TimerLiveProvider } from "./store/timerContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,7 +50,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <SettingsProvider>
           <WallpaperProvider>
-            <TasksProvider>{children}</TasksProvider>
+            <TasksProvider><TimerLiveProvider>{children}</TimerLiveProvider></TasksProvider>
           </WallpaperProvider>
         </SettingsProvider>
       </body>

@@ -1,7 +1,6 @@
 import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
 import 'settings_service.dart';
-import 'widget_window.dart';
 
 class AppTray with TrayListener {
   static final AppTray _instance = AppTray._internal();
@@ -24,14 +23,8 @@ class AppTray with TrayListener {
     final soundOn = _settings.soundEnabled;
     final startupOn = _settings.startupEnabled;
 
-    final widgetOn = WidgetWindowManager.isOpen;
-
     await trayManager.setContextMenu(Menu(items: [
       MenuItem(key: 'show', label: 'Abrir'),
-      MenuItem(
-        key: 'widget',
-        label: widgetOn ? '▣  Widget ativado' : '▢  Widget desativado',
-      ),
       MenuItem.separator(),
       MenuItem(
         key: 'sound',
@@ -42,7 +35,7 @@ class AppTray with TrayListener {
         label: startupOn ? '✅  Iniciar com Windows' : '⬜  Iniciar com Windows',
       ),
       MenuItem.separator(),
-      MenuItem(key: 'quit', label: 'Sair'),
+      MenuItem(key: 'quit', label: 'Fechar'),
     ]));
   }
 
@@ -54,13 +47,6 @@ class AppTray with TrayListener {
     switch (menuItem.key) {
       case 'show':
         _showWindow();
-      case 'widget':
-        if (WidgetWindowManager.isOpen) {
-          await WidgetWindowManager.close();
-        } else {
-          await WidgetWindowManager.open();
-        }
-        await _buildMenu();
       case 'sound':
         await _settings.setSoundEnabled(!_settings.soundEnabled);
         await _buildMenu();

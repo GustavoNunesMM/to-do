@@ -27,12 +27,6 @@ export default function ControllButtons({ className, onClick, tarefa, disabled }
             ]
         }
 
-        if (tarefa === 'done') {
-            return [
-                { title: 'reiniciar', action: () => onClick?.("start") }
-            ]
-        }
-
         return []
     }
 

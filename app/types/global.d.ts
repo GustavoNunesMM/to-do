@@ -13,6 +13,7 @@ declare global {
         savedRemainingSec?: number;
         taskElapsed?: number;
         pomodoroEnabled?: boolean;
+        pomodoroIntervalMin?: number | null;
         groupId?: number | null;
         parentId?: number | null;
         scheduledDate?: string | null;

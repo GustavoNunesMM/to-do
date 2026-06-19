@@ -101,7 +101,10 @@ export default function CalendarPage({ open, onRequestClose, onClose }: ModalPag
                         background: 'none', border: 'none', cursor: 'pointer',
                         color: 'rgba(255,255,255,0.45)', fontSize: 20, lineHeight: 1,
                         padding: '0 4px', display: 'flex', alignItems: 'center',
+                        transition: 'color 0.15s',
                     }}
+                    onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.85)')}
+                    onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.45)')}
                     title="Fechar (Esc)"
                 >
                     ✕

@@ -1,10 +1,3 @@
-export interface TimerState {
-    tarefa: TaskStatus
-    remainingSec: number | null
-    mode: 'task' | 'pomodoro'
-    pomodoroSec: number | null
-}
-
 export interface ArcProgressProps {
     progress: number
     arcSize: number
@@ -24,11 +17,21 @@ export type TasksAction =
     | { type: 'UPDATE_PROGRESS'; payload: { id: number; progress: number; remainingSec: number; taskElapsed: number } }
     | { type: 'SELECT';          payload: number | null }
     | { type: 'SET_GROUP';       payload: { itemId: number; groupId: number | null } }
+    | { type: 'REORDER';         payload: { fromIndex: number; toIndex: number } }
     | { type: 'HYDRATE';         payload: TasksState }
 
 export interface TasksState {
     items: Item[]
     selectedId: number | null
+}
+
+export interface CompletedEntry {
+    id: number
+    name: string
+    duration: durationType
+    completedAt: string
+    taskElapsed: number
+    groupId?: number | null
 }
 
 export interface TasksContextValue {
@@ -38,6 +41,7 @@ export interface TasksContextValue {
     hydrated: boolean
     pomodoroConfig: PomodoroConfig
     groups: Group[]
+    completedHistory: CompletedEntry[]
     add:            (item: Omit<Item, 'id' | 'status'>, id?: number) => void
     addSubtask:     (parentId: number, item: Omit<Item, 'id' | 'status' | 'parentId'>) => void
     remove:         (id: number) => void
@@ -45,11 +49,13 @@ export interface TasksContextValue {
     updateStatus:   (id: number, status: TaskStatus) => void
     updateProgress: (id: number, progress: number, remainingSec: number, taskElapsed: number) => void
     select:         (id: number | null) => void
+    reorder:        (fromIndex: number, toIndex: number) => void
     setPomodoroConfig: (cfg: PomodoroConfig) => void
     addGroup:       (name: string) => Group
     removeGroup:    (id: number) => void
     updateGroup:    (group: Group) => void
     setItemGroup:   (itemId: number, groupId: number | null) => void
+    clearHistory:   () => void
 }
 
 export interface ModalOpenProps {
@@ -61,28 +67,11 @@ export interface ModalPageProps extends ModalOpenProps {
     onRequestClose: () => void
 }
 
-export interface ClockControlProps {
-    onPlayRef?:    React.MutableRefObject<() => void>
-    onPauseRef?:   React.MutableRefObject<() => void>
-    onStopRef?:    React.MutableRefObject<() => void>
-    onTimerState?: (s: TimerState) => void
-}
-
 export interface ControllButtonsProps {
     className?: string
     onClick?: (event: string) => void
     tarefa: TaskStatus
     disabled?: boolean
-}
-
-export interface WidgetViewProps {
-    tarefa: TaskStatus
-    remainingSec: number | null
-    mode: 'task' | 'pomodoro'
-    pomodoroSec: number | null
-    onPlay: () => void
-    onPause: () => void
-    onStop: () => void
 }
 
 export interface TimePickerProps {
