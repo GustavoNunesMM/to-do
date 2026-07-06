@@ -8,7 +8,6 @@ import { useTasks } from '@/app/store/tasks';
 import { genId } from '@/app/lib/task';
 import type { SubtaskDraft, CreateModalProps } from '@/app/types';
 
-// ─── Shared dropdown styles ───────────────────────────────────────────────────
 
 const DROPDOWN_STYLE: React.CSSProperties = {
     position: 'absolute',
@@ -24,7 +23,6 @@ const DROPDOWN_STYLE: React.CSSProperties = {
 const WEEKDAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 const MONTHS   = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
 
-// ─── Calendar dropdown ────────────────────────────────────────────────────────
 
 function CalendarPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
     const [open, setOpen]   = useState(false)
@@ -159,7 +157,6 @@ function CalendarPicker({ value, onChange }: { value: string; onChange: (v: stri
     )
 }
 
-// ─── Time dropdown ────────────────────────────────────────────────────────────
 
 function TimePickerDropdown({ value, onChange, disabled }: { value: string; onChange: (v: string) => void; disabled: boolean }) {
     const [open, setOpen] = useState(false)
@@ -261,7 +258,30 @@ const timeCell: React.CSSProperties = {
     color: 'rgba(0,0,0,0.75)', fontSize: 22, fontWeight: 600, fontFamily: 'monospace',
 }
 
-// ─── Pomodoro toggle ──────────────────────────────────────────────────────────
+
+function ContinuousToggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+    return (
+        <button
+            type="button"
+            onClick={() => onChange(!value)}
+            title={value ? 'Tarefa contínua (sem tempo definido)' : 'Tornar tarefa contínua (sem tempo definido)'}
+            style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '8px 14px', height: 40,
+                background: value ? 'rgba(99,102,241,0.22)' : 'rgba(255,255,255,0.08)',
+                border: `1px solid ${value ? 'rgba(99,102,241,0.5)' : 'rgba(255,255,255,0.2)'}`,
+                borderRadius: 10, backdropFilter: 'blur(10px)',
+                color: value ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.5)',
+                fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                whiteSpace: 'nowrap', transition: 'background 0.2s, border-color 0.2s',
+            }}
+        >
+            <span style={{ fontSize: 16, lineHeight: 1 }}>∞</span>
+            Sem tempo
+        </button>
+    )
+}
+
 
 function PomodoroToggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
     return (
@@ -288,7 +308,6 @@ function PomodoroToggle({ value, onChange }: { value: boolean; onChange: (v: boo
     )
 }
 
-// ─── Pomodoro interval input ──────────────────────────────────────────────────
 
 function PomodoroIntervalInput({ value, onChange }: { value: number | undefined; onChange: (v: number | undefined) => void }) {
     const [open, setOpen] = useState(false)
@@ -377,7 +396,6 @@ function PomodoroIntervalInput({ value, onChange }: { value: number | undefined;
     )
 }
 
-// ─── Section label ────────────────────────────────────────────────────────────
 
 function SectionLabel({ icon, label, count }: { icon: React.ReactNode; label: string; count?: number }) {
     return (
@@ -390,7 +408,6 @@ function SectionLabel({ icon, label, count }: { icon: React.ReactNode; label: st
     )
 }
 
-// ─── Subtask row ──────────────────────────────────────────────────────────────
 
 interface SubtaskRowProps {
     sub: SubtaskDraft
@@ -434,12 +451,12 @@ function SubtaskRow({ sub, index, inputRef, onUpdate, onRemove, onErrorClear }: 
     )
 }
 
-// ─── Main modal ───────────────────────────────────────────────────────────────
 
 export default function CreateModal({ openModal, onClose, editItem }: CreateModalProps) {
     const { add, update, addSubtask, remove, items } = useTasks();
     const [name, setName]                         = useState('');
     const [duration, setDuration]                 = useState<durationType>({ hours: 0, minutes: 30 });
+    const [continuous, setContinuous]             = useState(false);
     const [description, setDescription]           = useState('');
     const [pomodoroEnabled, setPomodoroEnabled]   = useState(true);
     const [pomodoroIntervalMin, setPomodoroIntervalMin] = useState<number | undefined>(undefined);
@@ -461,6 +478,7 @@ export default function CreateModal({ openModal, onClose, editItem }: CreateModa
         if (editItem) {
             setName(editItem.name);
             setDuration(editItem.duration);
+            setContinuous(editItem.continuous ?? false);
             setDescription(editItem.description);
             setPomodoroEnabled(editItem.pomodoroEnabled ?? true);
             setPomodoroIntervalMin(editItem.pomodoroIntervalMin ?? undefined);
@@ -482,6 +500,7 @@ export default function CreateModal({ openModal, onClose, editItem }: CreateModa
     function clear() {
         setName('');
         setDuration({ hours: 0, minutes: 30 });
+        setContinuous(false);
         setDescription('');
         setPomodoroEnabled(true);
         setPomodoroIntervalMin(undefined);
@@ -515,7 +534,7 @@ export default function CreateModal({ openModal, onClose, editItem }: CreateModa
         const sTime = scheduledDate && scheduledTime ? scheduledTime : null
 
         if (editItem) {
-            update({ ...editItem, name, duration, description, pomodoroEnabled, pomodoroIntervalMin: pomodoroIntervalMin ?? null, scheduledDate: sDate, scheduledTime: sTime });
+            update({ ...editItem, name, duration, continuous, description, pomodoroEnabled, pomodoroIntervalMin: pomodoroIntervalMin ?? null, scheduledDate: sDate, scheduledTime: sTime });
 
             const storeSubs = items.filter(i => i.parentId === editItem.id);
             const storeIds  = new Set(storeSubs.map(i => i.id));
@@ -532,7 +551,7 @@ export default function CreateModal({ openModal, onClose, editItem }: CreateModa
             });
         } else {
             const parentId = genId();
-            add({ name, duration, description, pomodoroEnabled, pomodoroIntervalMin: pomodoroIntervalMin ?? null, scheduledDate: sDate, scheduledTime: sTime }, parentId);
+            add({ name, duration, continuous, description, pomodoroEnabled, pomodoroIntervalMin: pomodoroIntervalMin ?? null, scheduledDate: sDate, scheduledTime: sTime }, parentId);
             subtasks.forEach(sub => {
                 addSubtask(parentId, { name: sub.name, duration: sub.duration, description: '', pomodoroEnabled: sub.pomodoroEnabled });
             });
@@ -581,7 +600,8 @@ export default function CreateModal({ openModal, onClose, editItem }: CreateModa
 
                     {/* Duration + Pomodoro row */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18, flexWrap: 'wrap' }}>
-                        <DurationPicker value={duration} onChange={setDuration} />
+                        {!continuous && <DurationPicker value={duration} onChange={setDuration} />}
+                        <ContinuousToggle value={continuous} onChange={setContinuous} />
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10 }}>
                             <PomodoroToggle value={pomodoroEnabled} onChange={setPomodoroEnabled} />
                             {pomodoroEnabled && (

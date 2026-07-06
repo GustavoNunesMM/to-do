@@ -44,16 +44,14 @@ export default function DurationPicker({ value, onChange }: Props) {
     const { hours, minutes } = value;
     const label = `${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}min`;
 
-    // Mantém uma ref estável para onChange para não recriar o effect do drag
     const onChangeRef = useRef(onChange);
     useEffect(() => { onChangeRef.current = onChange; });
 
-    // Posiciona o popup relativo ao botão ao abrir
     function openPicker() {
         if (!buttonRef.current) return;
         const rect = buttonRef.current.getBoundingClientRect();
         const spaceBelow = window.innerHeight - rect.bottom;
-        const popupHeight = 370; // estimativa conservadora
+        const popupHeight = 370;
 
         const top = spaceBelow >= popupHeight
             ? rect.bottom + 10
@@ -67,7 +65,6 @@ export default function DurationPicker({ value, onChange }: Props) {
         setOpen(true);
     }
 
-    // Fecha ao clicar fora
     useEffect(() => {
         if (!open) return;
         function onMouseDown(e: MouseEvent) {
@@ -82,7 +79,6 @@ export default function DurationPicker({ value, onChange }: Props) {
         return () => document.removeEventListener('mousedown', onMouseDown);
     }, [open]);
 
-    // Drag global — usa refs para hours/minutes/view/onChange para não recriar o effect
     const hoursRef   = useRef(hours);
     const minutesRef = useRef(minutes);
     const viewRef    = useRef(view);

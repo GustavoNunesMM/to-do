@@ -1,12 +1,14 @@
 import type { MetadataRoute } from 'next';
 
+export const dynamic = 'force-static';
+
 export default function manifest(): MetadataRoute.Manifest {
     return {
         name: 'Minha App',
         short_name: 'App',
         description: 'Gerenciador de atividades',
         start_url: '/',
-        display: 'standalone',        // <- sem barra do browser
+        display: 'standalone',      
         background_color: '#0f0f1a',
         theme_color: '#0f0f1a',
         orientation: 'portrait',

@@ -35,6 +35,7 @@ export const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho
 
 
 function durLabel(item: Item): string {
+    if (item.continuous) return '∞'
     const sec = durationToSec(item.duration)
     const h = Math.floor(sec / 3600)
     const m = Math.floor((sec % 3600) / 60)

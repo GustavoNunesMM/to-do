@@ -21,7 +21,11 @@ module.exports = (phase: string) => {
             cacheOnFrontEndNav: true,
             reloadOnOnline: false,
         });
-        return withPWA(nextConfig);
+        return withPWA({
+            ...nextConfig,
+            output: 'export',
+            images: { unoptimized: true },
+        });
     }
     return nextConfig;
 };

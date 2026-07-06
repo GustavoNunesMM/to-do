@@ -49,3 +49,5 @@ next-env.d.ts
 /public/swe-worker-*.js.map
 /flutter_app/assets/web/*
 /.claude/*
+# Node standalone (nao mais usado)
+/.node-standalone/

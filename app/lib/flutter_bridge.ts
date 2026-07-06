@@ -1,6 +1,3 @@
-// Envia eventos para o Flutter shell via flutter_inappwebview.
-// Só executa quando rodando dentro do WebView Flutter — no browser normal é no-op.
-
 type FlutterHandler = { callHandler: (name: string, ...args: unknown[]) => void }
 
 function getFlutter(): FlutterHandler | null {

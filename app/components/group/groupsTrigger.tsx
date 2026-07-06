@@ -6,8 +6,8 @@ const EDGE_WIDTH = 28
 const TRIGGER_X  = 60  
 
 export default function GroupsTrigger({ onOpen }: { onOpen: () => void }) {
-    const [visible, setVisible]   = useState(false)   // semicírculo visível
-    const [filling, setFilling]   = useState(false)   // animação de preenchimento
+    const [visible, setVisible]   = useState(false)   
+    const [filling, setFilling]   = useState(false)   
     const timerRef  = useRef<NodeJS.Timeout | null>(null)
     const fillStart = useRef<number | null>(null)
     const rafRef    = useRef<number | null>(null)

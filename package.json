@@ -6,7 +6,6 @@
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
-    "build:app": "powershell -ExecutionPolicy Bypass -File ./build.ps1",
     "build:app": "powershell -ExecutionPolicy Bypass -File ./build.ps1"
   },
   "dependencies": {

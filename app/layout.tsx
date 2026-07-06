@@ -26,8 +26,6 @@ export const metadata: Metadata = {
   },
 };
 
-// Script inline que desregistra qualquer service worker em dev ou no WebView Flutter.
-// Em produção o SW é gerenciado pelo next-pwa normalmente.
 const unregisterSW = `
 if ('serviceWorker' in navigator && (location.hostname === 'localhost' || navigator.userAgent.includes('wv'))) {
   navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));

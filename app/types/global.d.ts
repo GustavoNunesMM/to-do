@@ -7,6 +7,7 @@ declare global {
         name: string;
         id: number;
         duration: durationType;
+        continuous?: boolean;
         description: string;
         status: TaskStatus;
         savedProgress?: number;

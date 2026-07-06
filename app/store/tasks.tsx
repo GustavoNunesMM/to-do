@@ -154,7 +154,6 @@ export function TasksProvider({ children }: { children: ReactNode }) {
         setCompletedHistory([])
     }
 
-    // Registra no histórico quando uma tarefa raiz é concluída
     useEffect(() => {
         if (!hydrated) return
         const now = new Date().toISOString()

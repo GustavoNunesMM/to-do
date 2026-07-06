@@ -1,6 +1,6 @@
 'use client'
 import Clock from '@/app/components/clock/clock'
-import ControllButtons from '@/app/components/controllButtons'
+import ControllButtons, { FinishButton } from '@/app/components/controllButtons'
 import { useTasks } from '@/app/store/tasks'
 import { STATUS_CONFIG, durationToSec, formatTime } from '@/app/lib/task'
 import { useTimer } from '@/app/hooks/useTimer'
@@ -12,18 +12,22 @@ const modeConfig = {
 
 export default function ClockControl() {
     const { selected, pomodoroConfig } = useTasks()
-    const { tarefa, mode, progress, remainingSec, pomodoroSec, nearPomodoro, start, pause, stop, skipPomodoro } = useTimer()
+    const { tarefa, mode, progress, remainingSec, elapsedSec, pomodoroSec, nearPomodoro, start, pause, stop, restart, finish, skipPomodoro } = useTimer()
 
     function controllButtons(event: string) {
         switch (event) {
-            case 'stop':               stop();  break
-            case 'pause':              pause(); break
-            case 'play': case 'start': start(); break
+            case 'stop':               stop();    break
+            case 'restart':            restart(); break
+            case 'finish':             finish();  break
+            case 'pause':              pause();   break
+            case 'play': case 'start': start();   break
         }
     }
 
+    const continuous = selected?.continuous ?? false
+
     const pomodoroMarkers = (() => {
-        if (!selected?.pomodoroEnabled || !selected) return []
+        if (!selected?.pomodoroEnabled || !selected || continuous) return []
         const totalSec    = durationToSec(selected.duration)
         const intervalMin = selected.pomodoroIntervalMin ?? pomodoroConfig.intervalMin
         const intervalSec = intervalMin * 60
@@ -39,13 +43,16 @@ export default function ClockControl() {
     const activeCfg  = isRunning
         ? modeConfig[mode]
         : { ...STATUS_CONFIG[tarefa], timeColor: 'text-white/60', arcClass: '' }
-    const totalSec   = selected ? durationToSec(selected.duration) : null
+    const totalSec   = selected && !continuous ? durationToSec(selected.duration) : null
     const displaySec = mode === 'pomodoro' ? pomodoroSec : (remainingSec ?? totalSec)
+    const showInfinity = continuous && (mode !== 'pomodoro' || !isRunning)
 
     return (
         <div className="relative h-full w-full flex items-center justify-center">
             <div className="relative h-full max-h-full aspect-square flex items-end justify-center pb-8">
-                <div className="absolute inset-0 flex items-center justify-center">
+                {/* pointer-events-none: o overlay do arco cobre o container inteiro
+                    e roubava os cliques dos botões centrais */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <Clock
                         progress={progress}
                         arcSize={270}
@@ -59,7 +66,21 @@ export default function ClockControl() {
 
                 <div className="flex flex-col items-center gap-3 my-auto">
                     <div className="flex flex-col items-center gap-1">
-                        {displaySec !== null && (
+                        {showInfinity ? (
+                            <div className="flex flex-col items-center gap-0.5">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-5xl font-light text-white/70 leading-none select-none">∞</span>
+                                    <span className={`text-lg tracking-widest uppercase transition-colors duration-700 ${activeCfg.timeColor}`}>
+                                        Tarefa contínua
+                                    </span>
+                                </div>
+                                {elapsedSec > 0 && (
+                                    <span className="text-white/40 text-sm tabular-nums">
+                                        {formatTime(elapsedSec)} decorrido
+                                    </span>
+                                )}
+                            </div>
+                        ) : displaySec !== null && (
                             <p className={`text-4xl font-light tabular-nums tracking-tight transition-colors duration-700 ${activeCfg.timeColor}`}>
                                 {formatTime(displaySec)} Restantes
                             </p>
@@ -75,10 +96,11 @@ export default function ClockControl() {
                             </span>
                         </div>
                     </div>
-                    <ControllButtons
+                    <FinishButton
                         onClick={controllButtons}
                         tarefa={tarefa}
                         disabled={!selected}
+                        hasProgress={progress > 0 || elapsedSec > 0}
                     />
                     {isRunning && (
                         <div className="flex items-center gap-2 mt-1">
@@ -100,6 +122,17 @@ export default function ClockControl() {
                             <span className="text-orange-300 text-xs tracking-wide">Pausa chegando</span>
                         </div>
                     )}
+                </div>
+
+                {/* Controles principais — alinhados com a parte de baixo do timer,
+                    na abertura do arco (270°) */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+                    <ControllButtons
+                        onClick={controllButtons}
+                        tarefa={tarefa}
+                        disabled={!selected}
+                        hasProgress={progress > 0 || elapsedSec > 0}
+                    />
                 </div>
             </div>
         </div>

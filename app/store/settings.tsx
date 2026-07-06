@@ -14,23 +14,17 @@ import {
 const STORAGE_KEY = 'app-settings'
 
 export interface AppSettings {
-    // Pomodoro
-    pomodoroInterval: number   // minutes, default 25
-    pomodoroBreak: number      // minutes, default 5
-    // Appearance
-    wallpaper: string          // css url/gradient string
-    // Sound
+    pomodoroInterval: number   
+    pomodoroBreak: number     
+    wallpaper: string         
     soundEnabled: boolean
-    soundVolume: number        // 0-100
-    soundFile: string          // asset name
-    // Ambient sounds
+    soundVolume: number        
+    soundFile: string          
     ambientEnabled: boolean
-    ambientFile: string         // MP3 filename
-    ambientVolume: number       // 0-100
-    // App behavior
+    ambientFile: string       
+    ambientVolume: number      
     minimizeOnClose: boolean
     startOnBoot: boolean
-    // Notifications
     showNotifications: boolean
 }
 
@@ -54,7 +48,6 @@ const SettingsContext = createContext<{ settings: AppSettings; updateSettings: (
 export function SettingsProvider({ children }: { children: ReactNode }) {
     const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS)
 
-    // Hydrate from localStorage
     useEffect(() => {
         try {
             const stored = localStorage.getItem(STORAGE_KEY)
@@ -65,7 +58,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         } catch {}
     }, [])
 
-    // Persist to localStorage whenever settings change
     useEffect(() => {
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
@@ -76,7 +68,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         setSettings(prev => {
             const next = { ...prev, ...patch }
 
-            // Sync flutter bridge for relevant fields
             if (patch.soundEnabled !== undefined)    setFlutterSoundEnabled(next.soundEnabled)
             if (patch.soundVolume !== undefined)     setFlutterVolume(next.soundVolume)
             if (patch.soundFile !== undefined)       setFlutterSoundFile(next.soundFile)

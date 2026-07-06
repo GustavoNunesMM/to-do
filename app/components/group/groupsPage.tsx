@@ -5,16 +5,14 @@ import { useTasks } from '@/app/store/tasks'
 import { STATUS_CONFIG, formatDuration } from '@/app/lib/task'
 import type { GroupDragState } from '@/app/types'
 
-// ─── Task card ────────────────────────────────────────────────────────────────
 
 function TaskCard({
-    item, subtasks, group, onDragStart, onDragEnd, isDragging,
+    item, subtasks, group, onDragStart, isDragging,
 }: {
     item: Item
     subtasks: Item[]
     group: Group | null
-    onDragStart: (e: React.DragEvent, itemId: number, groupId: number | null) => void
-    onDragEnd: () => void
+    onDragStart: (e: React.PointerEvent, item: Item) => void
     isDragging: boolean
 }) {
     const hasSubs = subtasks.length > 0
@@ -35,14 +33,14 @@ function TaskCard({
 
     return (
         <div
-            draggable
-            onDragStart={e => onDragStart(e, item.id, item.groupId ?? null)}
-            onDragEnd={onDragEnd}
+            onPointerDown={e => onDragStart(e, item)}
             style={{
                 opacity: isDragging ? 0.35 : 1,
                 transform: isDragging ? 'scale(0.97)' : 'scale(1)',
                 transition: 'opacity 0.15s, transform 0.15s',
                 cursor: 'grab',
+                touchAction: 'none',
+                userSelect: 'none',
                 display: 'flex', flexDirection: 'column',
             }}
         >
@@ -73,7 +71,7 @@ function TaskCard({
                         <span className={`w-1.5 h-1.5 rounded-full ${dot}`} style={{ width: 6, height: 6, borderRadius: '50%', flexShrink: 0 }} />
                         <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11 }} className={className}>{label}</span>
                     </div>
-                    <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, fontFamily: 'monospace' }}>{formatDuration(item.duration)}</span>
+                    <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, fontFamily: 'monospace' }}>{item.continuous ? '∞' : formatDuration(item.duration)}</span>
                 </div>
                 {item.description && !hasSubs && (
                     <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, lineHeight: 1.4,
@@ -118,23 +116,20 @@ function TaskCard({
     )
 }
 
-// ─── Column ───────────────────────────────────────────────────────────────────
 
 function Column({
-    group, items, allItems, dragState,
-    onDragStart, onDragEnd, onDrop, onRenameGroup, onDeleteGroup,
+    group, items, allItems, dragState, isOver,
+    onDragStart, onRenameGroup, onDeleteGroup,
 }: {
     group: Group | null
     items: Item[]
     allItems: Item[]
     dragState: GroupDragState | null
-    onDragStart: (e: React.DragEvent, itemId: number, groupId: number | null) => void
-    onDragEnd: () => void
-    onDrop: (targetGroupId: number | null) => void
+    isOver: boolean
+    onDragStart: (e: React.PointerEvent, item: Item) => void
     onRenameGroup: (group: Group, newName: string) => void
     onDeleteGroup: (groupId: number) => void
 }) {
-    const [isOver, setIsOver]     = useState(false)
     const [editing, setEditing]   = useState(false)
     const [editName, setEditName] = useState(group?.name ?? '')
     const inputRef = useRef<HTMLInputElement>(null)
@@ -155,9 +150,7 @@ function Column({
 
     return (
         <div
-            onDragOver={e => { e.preventDefault(); setIsOver(true) }}
-            onDragLeave={() => setIsOver(false)}
-            onDrop={e => { e.preventDefault(); setIsOver(false); onDrop(group?.id ?? null) }}
+            data-group-col={group ? String(group.id) : 'null'}
             style={{
                 display: 'flex', flexDirection: 'column',
                 width: 232, flexShrink: 0,
@@ -260,7 +253,6 @@ function Column({
                         subtasks={allItems.filter(i => i.parentId === item.id)}
                         group={group}
                         onDragStart={onDragStart}
-                        onDragEnd={onDragEnd}
                         isDragging={dragState?.itemId === item.id}
                     />
                 ))}
@@ -269,7 +261,6 @@ function Column({
     )
 }
 
-// ─── New group button ─────────────────────────────────────────────────────────
 
 function NewGroupButton({ onAdd }: { onAdd: (name: string) => void }) {
     const [creating, setCreating] = useState(false)
@@ -339,12 +330,23 @@ function NewGroupButton({ onAdd }: { onAdd: (name: string) => void }) {
     )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+
+function colUnderPoint(x: number, y: number): string | undefined {
+    for (const el of document.elementsFromPoint(x, y)) {
+        const col = (el as HTMLElement).closest?.('[data-group-col]')
+        if (col) return (col as HTMLElement).dataset.groupCol
+    }
+    return undefined
+}
 
 export default function GroupsPage({ open, onClose, onRequestClose }: { open: boolean; onClose: () => void; onRequestClose: () => void }) {
     const { items, groups, addGroup, removeGroup, updateGroup, setItemGroup } = useTasks()
     const [dragState, setGroupDragState] = useState<GroupDragState | null>(null)
+    const [dragItem, setDragItem]        = useState<Item | null>(null)
+    const [ghost, setGhost]              = useState({ x: 0, y: 0 })
+    const [overCol, setOverCol]          = useState<string | undefined>(undefined)
     const [animClass, setAnimClass]      = useState('groups-enter')
+    const dragRef = useRef<GroupDragState | null>(null)
 
     useEffect(() => {
         function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onRequestClose() }
@@ -362,15 +364,44 @@ export default function GroupsPage({ open, onClose, onRequestClose }: { open: bo
         }
     }, [open])
 
-    const handleDragStart  = useCallback((_e: React.DragEvent, itemId: number, sourceGroupId: number | null) => {
-        setGroupDragState({ itemId, sourceGroupId })
+    const handleDragStart = useCallback((e: React.PointerEvent, item: Item) => {
+        e.preventDefault()
+        const state = { itemId: item.id, sourceGroupId: item.groupId ?? null }
+        dragRef.current = state
+        setGroupDragState(state)
+        setDragItem(item)
+        setGhost({ x: e.clientX, y: e.clientY })
     }, [])
-    const handleDragEnd    = useCallback(() => setGroupDragState(null), [])
-    const handleDrop       = useCallback((targetGroupId: number | null) => {
-        if (!dragState) return
-        if (dragState.sourceGroupId !== targetGroupId) setItemGroup(dragState.itemId, targetGroupId)
-        setGroupDragState(null)
-    }, [dragState, setItemGroup])
+
+    const setItemGroupRef = useRef(setItemGroup)
+    setItemGroupRef.current = setItemGroup
+
+    useEffect(() => {
+        function onMove(e: PointerEvent) {
+            if (!dragRef.current) return
+            setGhost({ x: e.clientX, y: e.clientY })
+            setOverCol(colUnderPoint(e.clientX, e.clientY))
+        }
+        function onUp(e: PointerEvent) {
+            const state = dragRef.current
+            if (!state) return
+            dragRef.current = null
+            setGroupDragState(null)
+            setDragItem(null)
+            setOverCol(undefined)
+
+            const col = colUnderPoint(e.clientX, e.clientY)
+            if (col === undefined) return
+            const targetGroupId = col === 'null' ? null : Number(col)
+            if (state.sourceGroupId !== targetGroupId) setItemGroupRef.current(state.itemId, targetGroupId)
+        }
+        window.addEventListener('pointermove', onMove)
+        window.addEventListener('pointerup', onUp)
+        return () => {
+            window.removeEventListener('pointermove', onMove)
+            window.removeEventListener('pointerup', onUp)
+        }
+    }, [])
 
     const roots     = items.filter(i => !i.parentId)
     const ungrouped = roots.filter(i => !i.groupId || !groups.find(g => g.id === i.groupId))
@@ -430,9 +461,8 @@ export default function GroupsPage({ open, onClose, onRequestClose }: { open: bo
                         items={ungrouped}
                         allItems={items}
                         dragState={dragState}
+                        isOver={dragState !== null && overCol === 'null'}
                         onDragStart={handleDragStart}
-                        onDragEnd={handleDragEnd}
-                        onDrop={handleDrop}
                         onRenameGroup={() => {}}
                         onDeleteGroup={() => {}}
                     />
@@ -443,15 +473,39 @@ export default function GroupsPage({ open, onClose, onRequestClose }: { open: bo
                             items={roots.filter(i => i.groupId === group.id)}
                             allItems={items}
                             dragState={dragState}
+                            isOver={dragState !== null && overCol === String(group.id)}
                             onDragStart={handleDragStart}
-                            onDragEnd={handleDragEnd}
-                            onDrop={handleDrop}
                             onRenameGroup={(g, newName) => updateGroup({ ...g, name: newName })}
                             onDeleteGroup={removeGroup}
                         />
                     ))}
                 </div>
             </div>
+
+            {/* ghost do card sendo arrastado */}
+            {dragItem && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        left: ghost.x + 14,
+                        top: ghost.y + 14,
+                        pointerEvents: 'none',
+                        zIndex: 9999,
+                        background: 'rgba(99,102,241,0.9)',
+                        border: '1px solid rgba(255,255,255,0.3)',
+                        borderRadius: 6,
+                        padding: '4px 10px',
+                        color: '#fff',
+                        fontSize: 11,
+                        fontWeight: 600,
+                        whiteSpace: 'nowrap',
+                        boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+                        userSelect: 'none',
+                    }}
+                >
+                    {dragItem.name}
+                </div>
+            )}
         </div>
     )
 }

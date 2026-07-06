@@ -6,8 +6,6 @@ import 'package:local_notifier/local_notifier.dart';
 import 'settings_service.dart';
 import 'tray.dart';
 
-const _appUrl = 'http://localhost:3000';
-
 sealed class _AudioCmd {}
 class _PlayDefault  extends _AudioCmd {}
 class _PlayPreview  extends _AudioCmd {
@@ -22,7 +20,8 @@ class _AmbientVolume extends _AudioCmd {
 }
 
 class WebViewScreen extends StatefulWidget {
-  const WebViewScreen({super.key, this.webViewEnvironment});
+  const WebViewScreen({super.key, required this.appUrl, this.webViewEnvironment});
+  final String appUrl;
   final WebViewEnvironment? webViewEnvironment;
 
   @override
@@ -205,7 +204,7 @@ class _WebViewScreenState extends State<WebViewScreen> {
       body: Stack(
         children: [
           InAppWebView(
-            initialUrlRequest: URLRequest(url: WebUri(_appUrl)),
+            initialUrlRequest: URLRequest(url: WebUri(widget.appUrl)),
             webViewEnvironment: widget.webViewEnvironment,
             initialSettings: InAppWebViewSettings(
               transparentBackground: true,

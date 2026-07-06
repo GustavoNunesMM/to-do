@@ -32,7 +32,7 @@ function buildTick(
 function buildMarkerPoint(frac: number, startDeg: number, arcSizeDeg: number, radius: number, tickLen: number) {
     const deg = startDeg + frac * arcSizeDeg;
     const rad = ((deg - 90) * Math.PI) / 180;
-    const r = radius + tickLen / 2 + 10; // fora do arco com gap
+    const r = radius + tickLen / 2 + 10; 
     return { cx: Math.cos(rad) * r, cy: Math.sin(rad) * r };
 }
 

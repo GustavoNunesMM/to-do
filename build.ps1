@@ -1,7 +1,8 @@
-# Build completo: Next.js + Node.js embutido + Flutter Windows + Instalador
+# Build completo: Next.js (export estático) + Flutter Windows + Instalador
+# Sem Node.js embutido: o exe Flutter serve o export estático de dentro do
+# próprio processo (lib/local_server.dart).
 param(
     [switch]$SkipNext,
-    [switch]$SkipNode,
     [switch]$SkipFlutter,
     [switch]$SkipInstaller
 )
@@ -12,61 +13,34 @@ $release = "$root\flutter_app\build\windows\x64\runner\Release"
 
 Stop-Process -Name "flutter_app" -Force -ErrorAction SilentlyContinue
 
-# ── 1. Build Next.js ────────────────────────────────────────────────────────
+# ── 1. Build Next.js (export estático → out/) ───────────────────────────────
 if (-not $SkipNext) {
-    Write-Host "`n==> [1/5] Build Next.js..." -ForegroundColor Cyan
+    Write-Host "`n==> [1/4] Build Next.js (export estatico)..." -ForegroundColor Cyan
     Set-Location $root
     pnpm build
-}
-
-# ── 2. Node.js standalone ───────────────────────────────────────────────────
-$nodeDir = "$root\.node-standalone"
-$nodeExe = "$nodeDir\node.exe"
-$nodeVer = "22.5.1"
-$nodeUrl = "https://nodejs.org/dist/v$nodeVer/win-x64/node.exe"
-
-if (-not $SkipNode) {
-    Write-Host "`n==> [2/5] Baixando Node.js $nodeVer standalone..." -ForegroundColor Cyan
-    if (-not (Test-Path $nodeDir)) { New-Item -ItemType Directory -Path $nodeDir | Out-Null }
-    if (-not (Test-Path $nodeExe)) {
-        Invoke-WebRequest -Uri $nodeUrl -OutFile $nodeExe
-        Write-Host "   Baixado: $nodeExe"
-    } else {
-        Write-Host "   Ja existe: $nodeExe (pulando download)"
+    if (-not (Test-Path "$root\out\index.html")) {
+        throw "Export estatico nao gerado (out\index.html ausente). Verifique output: 'export' no next.config.ts"
     }
 }
 
-# ── 3. Build Flutter ────────────────────────────────────────────────────────
+# ── 2. Build Flutter ────────────────────────────────────────────────────────
 if (-not $SkipFlutter) {
-    Write-Host "`n==> [3/5] Build Flutter Windows (release)..." -ForegroundColor Cyan
+    Write-Host "`n==> [2/4] Build Flutter Windows (release)..." -ForegroundColor Cyan
     Set-Location "$root\flutter_app"
     flutter pub get
     flutter build windows --release
 }
 
-# ── 4. Copiar webapp + node.exe para Release ────────────────────────────────
-Write-Host "`n==> [4/5] Montando pasta Release..." -ForegroundColor Cyan
+# ── 3. Copiar webapp estática para Release ──────────────────────────────────
+Write-Host "`n==> [3/4] Copiando webapp estatica para Release..." -ForegroundColor Cyan
 
-# webapp
 $webDest = "$release\webapp"
 if (Test-Path $webDest) { Remove-Item $webDest -Recurse -Force }
-New-Item -ItemType Directory -Path $webDest | Out-Null
+Copy-Item "$root\out" $webDest -Recurse
 
-Copy-Item "$root\.next"        "$webDest\.next"        -Recurse
-Copy-Item "$root\public"       "$webDest\public"       -Recurse
-Copy-Item "$root\package.json" "$webDest\package.json"
-Copy-Item "$root\server.js"    "$webDest\server.js"
-
-Write-Host "   Copiando node_modules (pode demorar)..."
-Copy-Item "$root\node_modules" "$webDest\node_modules" -Recurse
-
-# node.exe
-Copy-Item $nodeExe "$release\node.exe" -Force
-Write-Host "   node.exe copiado para Release"
-
-# ── 5. Gerar instalador com Inno Setup ──────────────────────────────────────
+# ── 4. Gerar instalador com Inno Setup ──────────────────────────────────────
 if (-not $SkipInstaller) {
-    Write-Host "`n==> [5/5] Gerando instalador (Inno Setup)..." -ForegroundColor Cyan
+    Write-Host "`n==> [4/4] Gerando instalador (Inno Setup)..." -ForegroundColor Cyan
 
     $inno = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
     if (-not (Test-Path $inno)) {
@@ -81,4 +55,4 @@ if (-not $SkipInstaller) {
 
 Write-Host "`n==> Build concluido!" -ForegroundColor Green
 Write-Host "    Executavel:  $release\flutter_app.exe"
-Write-Host "    Instalador:  $root\dist\ToDoTimer-Setup-1.0.0.exe"
+Write-Host "    Instalador:  $root\dist\"

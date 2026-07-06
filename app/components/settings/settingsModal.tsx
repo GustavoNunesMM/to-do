@@ -201,7 +201,6 @@ function TabSom() {
     function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0]
         if (!file) return
-        // Envia o nome do arquivo para o Flutter copiar/usar via bridge
         updateSettings({ soundFile: file.name })
         previewSound(file.name, settings.soundVolume)
         e.target.value = ''
@@ -209,7 +208,6 @@ function TabSom() {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-            {/* Toggle */}
             <div style={{ ...GLASS, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                     <p style={{ color: '#fff', fontSize: 14, fontWeight: 500 }}>Sons ativados</p>
@@ -220,7 +218,6 @@ function TabSom() {
                 <ToggleSwitch value={settings.soundEnabled} onChange={v => updateSettings({ soundEnabled: v })} />
             </div>
 
-            {/* Volume */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <p style={SECTION_LABEL}>Volume</p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

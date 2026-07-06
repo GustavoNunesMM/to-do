@@ -31,9 +31,7 @@ Name: "startupicon"; Description: "Iniciar com o Windows"; GroupDescription: "Op
 ; Executável principal e DLLs Flutter
 Source: "{#ReleaseDir}\{#AppExeName}";          DestDir: "{app}"; Flags: ignoreversion
 Source: "{#ReleaseDir}\*.dll";                   DestDir: "{app}"; Flags: ignoreversion recursesubdirs
-; Node.js standalone
-Source: "{#ReleaseDir}\node.exe";               DestDir: "{app}"; Flags: ignoreversion
-; Next.js webapp
+; Next.js webapp (export estático, servido pelo próprio exe)
 Source: "{#ReleaseDir}\webapp\*";               DestDir: "{app}\webapp"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; Flutter assets (sons, icones, etc)
 Source: "{#ReleaseDir}\data\*";                 DestDir: "{app}\data"; Flags: ignoreversion recursesubdirs createallsubdirs

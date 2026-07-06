@@ -36,7 +36,6 @@ export function CalendarDragProvider({ children }: { children: ReactNode }) {
             setDragging(null)
             setGhost({ x: 0, y: 0 })
 
-            // Encontra o destino de drop sob o cursor
             const els = document.elementsFromPoint(e.clientX, e.clientY)
             for (const el of els) {
                 const handler = dropsRef.current.get(el as HTMLElement)

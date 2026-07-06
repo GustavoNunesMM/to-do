@@ -14,11 +14,14 @@ export interface UseTimerReturn {
     mode: TimerMode
     progress: number
     remainingSec: number | null
+    elapsedSec: number
     pomodoroSec: number | null
     nearPomodoro: boolean
     start: () => void
     pause: () => void
     stop: () => void
+    restart: () => void
+    finish: () => void
     skipPomodoro: () => void
 }
 
@@ -30,6 +33,7 @@ export function useTimer(): UseTimerReturn {
     const [mode, setMode]                 = useState<TimerMode>('task')
     const [progress, setProgress]         = useState(0)
     const [remainingSec, setRemainingSec] = useState<number | null>(null)
+    const [elapsedSec, setElapsedSec]     = useState(0)
     const [pomodoroSec, setPomodoroSec]   = useState<number | null>(null)
     const [nearPomodoro, setNearPomodoro] = useState(false)
 
@@ -70,37 +74,39 @@ export function useTimer(): UseTimerReturn {
             if (modeRef.current !== 'task') return
 
             taskElapsedRef.current += 1
+            setElapsedSec(taskElapsedRef.current)
             const cfg = pomConfigRef.current
             const sel = selectedRef.current
 
             const intervalMin     = sel?.pomodoroIntervalMin ?? cfg.intervalMin
             const intervalSec     = intervalMin * 60
             const pomodoroEnabled = sel?.pomodoroEnabled ?? true
+            const continuous      = sel?.continuous ?? false
 
-            // Decrementa remaining usando ref para evitar stale closure
-            const nextRemaining = remainingSecRef.current !== null && remainingSecRef.current > 1
-                ? remainingSecRef.current - 1
-                : 0
-            remainingSecRef.current = nextRemaining
-            setRemainingSec(nextRemaining)
-            setLiveRemSecRef.current(nextRemaining)
+            if (!continuous) {
+                const nextRemaining = remainingSecRef.current !== null && remainingSecRef.current > 1
+                    ? remainingSecRef.current - 1
+                    : 0
+                remainingSecRef.current = nextRemaining
+                setRemainingSec(nextRemaining)
+                setLiveRemSecRef.current(nextRemaining)
 
-            // Incrementa progresso usando ref
-            const nextProgress = Math.min(progressRef.current + (100 / totalTaskSec), 100)
-            progressRef.current = nextProgress
-            setProgress(nextProgress)
+                const nextProgress = Math.min(progressRef.current + (100 / totalTaskSec), 100)
+                progressRef.current = nextProgress
+                setProgress(nextProgress)
 
-            if (nextProgress >= 100) {
-                clearTimer()
-                setTarefa('done')
-                setNearPomodoro(false)
-                setLiveRemSecRef.current(null)
-                if (sel) {
-                    updateStatusRef.current(sel.id, 'done')
-                    updateProgressRef.current(sel.id, 100, 0, taskElapsedRef.current)
-                    notifyTaskDone(sel.name)
+                if (nextProgress >= 100) {
+                    clearTimer()
+                    setTarefa('done')
+                    setNearPomodoro(false)
+                    setLiveRemSecRef.current(null)
+                    if (sel) {
+                        updateStatusRef.current(sel.id, 'done')
+                        updateProgressRef.current(sel.id, 100, 0, taskElapsedRef.current)
+                        notifyTaskDone(sel.name)
+                    }
+                    return
                 }
-                return
             }
 
             if (pomodoroEnabled && intervalSec > 0) {
@@ -162,6 +168,18 @@ export function useTimer(): UseTimerReturn {
 
     function stop() {
         clearTimer()
+        saveProgress()
+        modeRef.current = 'task'
+        setMode('task')
+        setPomodoroSec(null)
+        setNearPomodoro(false)
+        setTarefa('idle')
+        setLiveRemainingSec(null)
+        if (selectedRef.current) updateStatus(selectedRef.current.id, 'idle')
+    }
+
+    function restart() {
+        clearTimer()
         modeRef.current = 'task'
         taskElapsedRef.current = 0
         progressRef.current = 0
@@ -169,6 +187,7 @@ export function useTimer(): UseTimerReturn {
         remainingSecRef.current = sel ? durationToSec(sel.duration) : null
         setMode('task')
         setProgress(0)
+        setElapsedSec(0)
         setPomodoroSec(null)
         setNearPomodoro(false)
         setRemainingSec(sel ? durationToSec(sel.duration) : null)
@@ -177,6 +196,26 @@ export function useTimer(): UseTimerReturn {
         if (sel) {
             updateStatus(sel.id, 'idle')
             updateProgress(sel.id, 0, durationToSec(sel.duration), 0)
+        }
+    }
+
+    function finish() {
+        clearTimer()
+        modeRef.current = 'task'
+        progressRef.current = 100
+        remainingSecRef.current = 0
+        setMode('task')
+        setProgress(100)
+        setRemainingSec(0)
+        setPomodoroSec(null)
+        setNearPomodoro(false)
+        setTarefa('done')
+        setLiveRemainingSec(null)
+        const sel = selectedRef.current
+        if (sel) {
+            updateStatus(sel.id, 'done')
+            updateProgress(sel.id, 100, 0, taskElapsedRef.current)
+            notifyTaskDone(sel.name)
         }
     }
 
@@ -194,7 +233,6 @@ export function useTimer(): UseTimerReturn {
         startTimerRef.current(totalSec)
     }
 
-    // Sincroniza quando a tarefa selecionada muda (troca de id)
     useEffect(() => {
         clearTimer()
         modeRef.current = 'task'
@@ -214,6 +252,7 @@ export function useTimer(): UseTimerReturn {
             taskElapsedRef.current  = el
             setProgress(p)
             setRemainingSec(rem)
+            setElapsedSec(el)
             setTarefa(selected.status === 'running' ? 'paused' : selected.status)
         } else {
             progressRef.current     = 0
@@ -221,11 +260,12 @@ export function useTimer(): UseTimerReturn {
             taskElapsedRef.current  = 0
             setProgress(0)
             setRemainingSec(null)
+            setElapsedSec(0)
             setTarefa('idle')
         }
     }, [selected?.id])
 
     useEffect(() => () => { clearTimer() }, [])
 
-    return { tarefa, mode, progress, remainingSec, pomodoroSec, nearPomodoro, start, pause, stop, skipPomodoro }
+    return { tarefa, mode, progress, remainingSec, elapsedSec, pomodoroSec, nearPomodoro, start, pause, stop, restart, finish, skipPomodoro }
 }

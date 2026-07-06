@@ -9,7 +9,6 @@ import CreateModal from '@/app/components/modal/createModal'
 import { STATUS_CONFIG, durationToSec, formatRemaining, formatDuration, formatSec, formatTime } from '@/app/lib/task'
 import type { CompletedEntry } from '@/app/types'
 
-// ─── Animated subtask accordion ──────────────────────────────────────────────
 
 function AnimatedSubtasks({ open, children }: { open: boolean; children: React.ReactNode }) {
     const ref = useRef<HTMLDivElement>(null)
@@ -40,7 +39,6 @@ function AnimatedSubtasks({ open, children }: { open: boolean; children: React.R
     )
 }
 
-// ─── Subtask progress bar ─────────────────────────────────────────────────────
 
 function SubtaskProgressBar({ done, total, groupColor }: { done: number; total: number; groupColor?: string }) {
     const pct = total > 0 ? (done / total) * 100 : 0
@@ -59,7 +57,6 @@ function SubtaskProgressBar({ done, total, groupColor }: { done: number; total: 
     )
 }
 
-// ─── Delete confirmation ──────────────────────────────────────────────────────
 
 function DeleteModal({ name, onConfirm, onCancel }: { name: string; onConfirm: () => void; onCancel: () => void }) {
     return (
@@ -134,7 +131,6 @@ function DeleteModal({ name, onConfirm, onCancel }: { name: string; onConfirm: (
     )
 }
 
-// ─── Task card ────────────────────────────────────────────────────────────────
 
 interface TaskCardProps {
     item: Item
@@ -172,10 +168,10 @@ function TaskCard({ item, subs, selectedId, groups, isOpen, isDragOver, dragHand
         : isLiveTarget ? liveRemainingSec : item.savedRemainingSec
     const showRemaining = hasSubs
         ? ['running', 'paused', 'partial'].includes(derivedStatus)
-        : ['running', 'paused'].includes(item.status) && (item.savedRemainingSec !== undefined || isLiveTarget)
+        : !item.continuous && ['running', 'paused'].includes(item.status) && (item.savedRemainingSec !== undefined || isLiveTarget)
     const durationLabel = hasSubs
         ? formatSec(subs.reduce((acc, s) => acc + durationToSec(s.duration), 0))
-        : formatDuration(item.duration)
+        : item.continuous ? '∞' : formatDuration(item.duration)
 
     return (
         <div className="flex flex-col" style={{ opacity: isDragOver ? 0.45 : 1, transition: 'opacity 0.15s' }}>
@@ -277,7 +273,6 @@ function TaskCard({ item, subs, selectedId, groups, isOpen, isDragOver, dragHand
     )
 }
 
-// ─── Subtask list ─────────────────────────────────────────────────────────────
 
 interface SubtaskListProps {
     subs: Item[]
@@ -338,7 +333,6 @@ function SubtaskList({ subs, selectedId, group, onSelect }: SubtaskListProps) {
     )
 }
 
-// ─── History panel ────────────────────────────────────────────────────────────
 
 function HistoryPanel({ entries, onClear }: { entries: CompletedEntry[]; onClear: () => void }) {
     const grouped = entries.reduce<Record<string, CompletedEntry[]>>((acc, e) => {
@@ -446,7 +440,6 @@ function HistoryPanel({ entries, onClear }: { entries: CompletedEntry[]; onClear
     )
 }
 
-// ─── Drag-and-drop list ───────────────────────────────────────────────────────
 
 interface DraggableListProps {
     roots: Item[]
@@ -464,40 +457,61 @@ interface DraggableListProps {
 function DraggableTaskList({ roots, items, selectedId, groups, expanded, onToggleExpand, onSelect, onEdit, onDelete, onReorder }: DraggableListProps) {
     const [dragIndex, setDragIndex] = useState<number | null>(null)
     const [overIndex, setOverIndex] = useState<number | null>(null)
-    // ref so that toggling doesn't re-render and lose click events
-    const allowDragRef = useRef<number | null>(null)
+    const dragIndexRef = useRef<number | null>(null)
+    const overIndexRef = useRef<number | null>(null)
+    const rowRefs      = useRef<Map<number, HTMLDivElement>>(new Map())
+    const onReorderRef = useRef(onReorder)
+    onReorderRef.current = onReorder
 
-    function handleDragStart(e: React.DragEvent, index: number) {
-        if (allowDragRef.current !== index) { e.preventDefault(); return }
+    function startDrag(e: React.PointerEvent, index: number) {
+        e.preventDefault()
+        dragIndexRef.current = index
+        overIndexRef.current = index
         setDragIndex(index)
-        e.dataTransfer.effectAllowed = 'move'
-        const el = e.currentTarget as HTMLDivElement
-        requestAnimationFrame(() => { el.style.opacity = '0.4' })
+        setOverIndex(index)
     }
 
-    function handleDragEnd(e: React.DragEvent, index: number) {
-        const el = e.currentTarget as HTMLDivElement
-        el.style.opacity = '1'
-        allowDragRef.current = null
-        setDragIndex(prev => {
-            setOverIndex(over => {
-                if (prev !== null && over !== null && prev !== over) onReorder(prev, over)
-                return null
+    useEffect(() => {
+        function onMove(e: PointerEvent) {
+            if (dragIndexRef.current === null) return
+            let over: number | null = null
+            rowRefs.current.forEach((el, idx) => {
+                const r = el.getBoundingClientRect()
+                if (e.clientY >= r.top && e.clientY <= r.bottom) over = idx
             })
-            return null
-        })
-    }
+            if (over !== null && over !== overIndexRef.current) {
+                overIndexRef.current = over
+                setOverIndex(over)
+            }
+        }
+        function onUp() {
+            if (dragIndexRef.current === null) return
+            const from = dragIndexRef.current
+            const to   = overIndexRef.current
+            dragIndexRef.current = null
+            overIndexRef.current = null
+            setDragIndex(null)
+            setOverIndex(null)
+            if (from !== null && to !== null && from !== to) onReorderRef.current(from, to)
+        }
+        window.addEventListener('pointermove', onMove)
+        window.addEventListener('pointerup', onUp)
+        return () => {
+            window.removeEventListener('pointermove', onMove)
+            window.removeEventListener('pointerup', onUp)
+        }
+    }, [])
 
     return (
         <>
             {roots.map((item, index) => (
                 <div
                     key={item.id}
-                    draggable
-                    onDragStart={e => handleDragStart(e, index)}
-                    onDragEnd={e => handleDragEnd(e, index)}
-                    onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setOverIndex(index) }}
-                    onDrop={e => e.preventDefault()}
+                    ref={el => {
+                        if (el) rowRefs.current.set(index, el)
+                        else rowRefs.current.delete(index)
+                    }}
+                    style={{ opacity: dragIndex === index ? 0.4 : 1, transition: 'opacity 0.15s' }}
                 >
                     <TaskCard
                         item={item}
@@ -507,9 +521,8 @@ function DraggableTaskList({ roots, items, selectedId, groups, expanded, onToggl
                         isOpen={expanded.has(item.id)}
                         isDragOver={overIndex === index && dragIndex !== null && dragIndex !== index}
                         dragHandleProps={{
-                            style: { cursor: 'grab' },
-                            onMouseDown: () => { allowDragRef.current = index },
-                            onMouseUp:   () => { allowDragRef.current = null },
+                            style: { cursor: 'grab', touchAction: 'none' },
+                            onPointerDown: e => startDrag(e, index),
                         }}
                         onToggleExpand={onToggleExpand}
                         onSelect={onSelect}
@@ -522,7 +535,6 @@ function DraggableTaskList({ roots, items, selectedId, groups, expanded, onToggl
     )
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
 
 interface Props { openCreateModal: () => void }
 
